@@ -36,7 +36,8 @@ BUNDLE_ID="com.minorcell.cilicili"
 DEVELOPER_TEAM=""  # 如果有开发者账号，填入 Team ID
 
 # 路径定义
-PROJECT_DIR="$(pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"  # 项目根目录
 BUILD_DIR="$PROJECT_DIR/src-tauri/target/release/bundle/macos"
 RESOURCES_DIR="$PROJECT_DIR/resources"
 DMG_DIR="$PROJECT_DIR/dmg-build"
@@ -77,6 +78,7 @@ rm -rf "$OUTPUT_DIR/${APP_NAME}.app"
 
 # 安装前端依赖
 print_status "安装前端依赖..."
+cd "$PROJECT_DIR"
 npm install
 
 # 构建 Tauri 应用

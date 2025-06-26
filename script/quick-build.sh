@@ -5,21 +5,23 @@
 echo "🚀 开始快速构建 CiliCili..."
 
 # 项目根目录
-PROJECT_DIR="$(pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 APP_NAME="CiliCili"
 
 # 清理
 echo "📦 清理旧的构建文件..."
-rm -rf src-tauri/target/release/bundle
+rm -rf "$PROJECT_DIR/src-tauri/target/release/bundle"
 rm -rf "${PROJECT_DIR}/${APP_NAME}.app"
 
 # 构建
 echo "🔨 构建应用..."
+cd "$PROJECT_DIR"
 npm run tauri build
 
 # 检查结果
-if [ -d "src-tauri/target/release/bundle/macos" ]; then
-    APP_PATH=$(find src-tauri/target/release/bundle/macos -name "*.app" -type d | head -n 1)
+if [ -d "$PROJECT_DIR/src-tauri/target/release/bundle/macos" ]; then
+    APP_PATH=$(find "$PROJECT_DIR/src-tauri/target/release/bundle/macos" -name "*.app" -type d | head -n 1)
     if [ -n "$APP_PATH" ]; then
         APP_BUNDLE_NAME=$(basename "$APP_PATH")
         echo "✅ 构建成功: $APP_PATH"
