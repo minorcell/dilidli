@@ -22,10 +22,9 @@ function App() {
     setShowLogin(true);
   };
 
-  // VIP类型显示
-  const getVipBadge = (vipType: number) => {
-    if (vipType === 1) return { text: '月度大会员', color: 'from-pink-500 to-red-500' };
-    if (vipType === 2) return { text: '年度大会员', color: 'from-purple-500 to-pink-500' };
+  // VIP状态显示 (vip_type现在表示vip_status: 0=非大会员, 1=大会员)
+  const getVipBadge = (vipStatus: number) => {
+    if (vipStatus === 1) return { text: '大会员', color: 'from-pink-500 to-red-500' };
     return null;
   };
 
@@ -77,6 +76,11 @@ function App() {
                           src={userProfile.avatar}
                           alt="头像"
                           className="w-10 h-10 rounded-full ring-2 ring-pink-500/30"
+                          onError={(e) => {
+                            console.error('头像加载失败:', userProfile.avatar);
+                            // 替换为默认头像
+                            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhcl8xXzEpIi8+CjxwYXRoIGQ9Ik0yMCAxMkM4IDE2IDggMjQgMjAgMjhDMzIgMjQgMzIgMTYgMjAgMTJaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjgiLz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQwX2xpbmVhcl8xXzEiIHgxPSIwIiB5MT0iMCIgeDI9IjQwIiB5Mj0iNDAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iI0Y0NzJCNiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMzQjgyRjYiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K';
+                          }}
                         />
                       ) : (
                         <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-blue-400 rounded-full flex items-center justify-center">
@@ -116,6 +120,10 @@ function App() {
                               src={userProfile.avatar}
                               alt="头像"
                               className="w-12 h-12 rounded-full"
+                              onError={(e) => {
+                                console.error('头像加载失败:', userProfile.avatar);
+                                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhcl8xXzEpIi8+CjxwYXRoIGQ9Ik0yMCAxMkM4IDE2IDggMjQgMjAgMjhDMzIgMjQgMzIgMTYgMjAgMTJaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjgiLz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQwX2xpbmVhcl8xXzEiIHgxPSIwIiB5MT0iMCIgeDI9IjQwIiB5Mj0iNDAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iI0Y0NzJCNiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMzQjgyRjYiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K';
+                              }}
                             />
                           ) : (
                             <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-blue-400 rounded-full flex items-center justify-center">
@@ -149,16 +157,6 @@ function App() {
                         >
                           <span>👤</span>
                           <span>个人信息</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowUserMenu(false);
-                            // 这里可以添加设置的逻辑
-                          }}
-                          className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
-                        >
-                          <span>⚙️</span>
-                          <span>设置</span>
                         </button>
                         <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
                         <button
@@ -267,7 +265,6 @@ function App() {
       {showUserProfile && (
         <UserProfile onClose={() => setShowUserProfile(false)} />
       )}
-
       {/* 点击外部关闭用户菜单 */}
       {showUserMenu && (
         <div 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAppStore } from '../store/appStore';
-import { QrCodeData, LoginSuccessData, LoginStatus } from '../types/bilibili';
+import { QrCodeData, LoginSuccessData, LoginStatus, UserProfile } from '../types/bilibili';
 import { cn } from '../lib/utils';
 
 interface LoginProps {
@@ -83,15 +83,24 @@ export default function Login({ onClose }: LoginProps) {
             setStatusMessage('扫码成功！请在手机上确认登录');
             break;
           case LoginStatus.SUCCESS:
-            setStatusMessage('登录成功！正在跳转...');
+            setStatusMessage('登录成功！正在获取用户信息...');
             setLoginStatus('success');
             clearInterval(interval);
             
-            // 设置全局登录状态
+            // 获取用户信息
             try {
-              setGlobalLoginStatus(true, { name: '用户', avatar: '', mid: 0, vip_type: 0 }, result.cookies);
+              console.log('正在获取用户信息，cookies长度:', result.cookies.length);
+              const userProfile = await invoke<UserProfile>('get_user_info', { cookies: result.cookies });
+              console.log('用户信息获取成功:', userProfile);
+              setGlobalLoginStatus(true, userProfile, result.cookies);
+              setStatusMessage('登录成功！正在跳转...');
             } catch (error) {
-              console.error('设置登录状态失败:', error);
+              console.error('获取用户信息失败:', error);
+              // 即使获取用户信息失败，也使用默认信息登录
+              const defaultProfile = { name: '用户', avatar: '', mid: 0, vip_type: 0 };
+              console.log('使用默认用户信息:', defaultProfile);
+              setGlobalLoginStatus(true, defaultProfile, result.cookies);
+              setStatusMessage('登录成功！正在跳转...');
             }
             
             setTimeout(() => {

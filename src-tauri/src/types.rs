@@ -175,12 +175,85 @@ pub struct StoredLoginData {
     pub login_time: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserProfile {
     pub name: String,
     pub avatar: String,
     pub mid: u64,
     pub vip_type: u32,
+}
+
+// 用户信息API响应结构
+#[derive(Debug, Serialize, Deserialize)]
+pub struct VipInfo {
+    #[serde(rename = "type")]
+    pub vip_type: u32,
+    #[serde(rename = "status")]
+    pub vip_status: u32,
+    #[serde(rename = "due_date")]
+    pub due_date: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserInfoData {
+    #[serde(rename = "isLogin")]
+    pub is_login: bool,
+    #[serde(rename = "email_verified")]
+    pub email_verified: u32,
+    pub face: String,
+    #[serde(rename = "level_info")]
+    pub level_info: serde_json::Value,
+    pub mid: u64,
+    #[serde(rename = "mobile_verified")]
+    pub mobile_verified: u32,
+    pub money: f64,
+    pub moral: u32,
+    pub official: serde_json::Value,
+    #[serde(rename = "officialVerify")]
+    pub official_verify: serde_json::Value,
+    pub pendant: serde_json::Value,
+    pub scores: u32,
+    pub uname: String,
+    #[serde(rename = "vipDueDate")]
+    pub vip_due_date: Option<u64>,
+    #[serde(rename = "vipStatus")]
+    pub vip_status: u32,
+    #[serde(rename = "vipType")]
+    pub vip_type: u32,
+    #[serde(rename = "vip_pay_type")]
+    pub vip_pay_type: Option<u32>,
+    #[serde(rename = "vip_theme_type")]
+    pub vip_theme_type: Option<u32>,
+    #[serde(rename = "vip_label")]
+    pub vip_label: Option<serde_json::Value>,
+    #[serde(rename = "vip_avatar_subscript")]
+    pub vip_avatar_subscript: Option<u32>,
+    #[serde(rename = "vip_nickname_color")]
+    pub vip_nickname_color: Option<String>,
+    pub vip: VipInfo,
+    pub wallet: serde_json::Value,
+    #[serde(rename = "has_shop")]
+    pub has_shop: bool,
+    #[serde(rename = "shop_url")]
+    pub shop_url: Option<String>,
+    #[serde(rename = "answer_status")]
+    pub answer_status: u32,
+    #[serde(rename = "is_senior_member")]
+    pub is_senior_member: Option<u32>,
+    #[serde(rename = "wbi_img")]
+    pub wbi_img: Option<serde_json::Value>,
+    #[serde(rename = "is_jury")]
+    pub is_jury: Option<bool>,
+    #[serde(rename = "name_render")]
+    pub name_render: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserInfoResponse {
+    pub code: i32,
+    pub message: String,
+    pub ttl: u32,
+    pub data: UserInfoData,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

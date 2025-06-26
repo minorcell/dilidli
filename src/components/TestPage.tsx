@@ -181,7 +181,7 @@ export default function TestPage() {
                     )}
                     {userProfile?.vip_type && userProfile.vip_type > 0 && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
-                        👑 {userProfile.vip_type === 1 ? '月度大会员' : '年度大会员'}
+                        👑 大会员
                       </span>
                     )}
                   </div>

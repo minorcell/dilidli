@@ -33,10 +33,9 @@ export default function UserProfile({ onClose }: UserProfileProps) {
     );
   }
 
-  // VIP类型显示
-  const getVipInfo = (vipType: number) => {
-    if (vipType === 1) return { text: '月度大会员', color: 'from-pink-500 to-red-500', icon: '👑' };
-    if (vipType === 2) return { text: '年度大会员', color: 'from-purple-500 to-pink-500', icon: '👑' };
+  // VIP状态显示 (vip_type现在表示vip_status: 0=非大会员, 1=大会员)
+  const getVipInfo = (vipStatus: number) => {
+    if (vipStatus === 1) return { text: '大会员', color: 'from-pink-500 to-red-500', icon: '👑' };
     return null;
   };
 
@@ -61,16 +60,14 @@ export default function UserProfile({ onClose }: UserProfileProps) {
                     src={userProfile.avatar}
                     alt="头像"
                     className="w-20 h-20 rounded-2xl border-4 border-white/30 shadow-xl"
+                    onError={(e) => {
+                      console.error('头像加载失败:', userProfile.avatar);
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhcl8xXzEpIi8+CjxwYXRoIGQ9Ik0yMCAxMkM4IDE2IDggMjQgMjAgMjhDMzIgMjQgMzIgMTYgMjAgMTJaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjgiLz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQwX2xpbmVhcl8xXzEiIHgxPSIwIiB5MT0iMCIgeDI9IjQwIiB5Mj0iNDAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iI0Y0NzJCNiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMzQjgyRjYiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K';
+                    }}
                   />
                 ) : (
                   <div className="w-20 h-20 bg-white/20 rounded-2xl border-4 border-white/30 flex items-center justify-center">
                     <span className="text-3xl">👤</span>
-                  </div>
-                )}
-                {/* VIP角标 */}
-                {vipInfo && (
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-lg">👑</span>
                   </div>
                 )}
               </div>
@@ -138,49 +135,6 @@ export default function UserProfile({ onClose }: UserProfileProps) {
               </div>
             </div>
           </div>
-
-          {/* 会员特权 */}
-          {vipInfo && (
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 border border-yellow-200/50 dark:border-yellow-800/50">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">👑</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">会员特权</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center space-x-3">
-                  <span className="text-xl">🎬</span>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">高清视频</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">支持1080P+画质</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-xl">⚡</span>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">下载加速</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">更快的下载速度</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-xl">🚫</span>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">无广告</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">纯净下载体验</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-xl">🎯</span>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">优先支持</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">享受优先服务</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* 使用统计 */}
           <div className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-2xl p-6 border border-green-200/50 dark:border-green-800/50">

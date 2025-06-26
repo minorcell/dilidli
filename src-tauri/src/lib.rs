@@ -24,6 +24,7 @@ pub fn run() {
             greet,
             get_login_qr_code,
             poll_login_status,
+            get_user_info,
             get_video_info,
             get_video_streams,
             download_video,
