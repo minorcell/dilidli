@@ -113,11 +113,11 @@ export const MessageProvider: React.FC<MessageProviderProps> = ({ children }) =>
 function MessageItem({ message: msg, onClose }: { message: MessageState; onClose: (id: string) => void }) {
   const getIcon = () => {
     switch (msg.type) {
-      case 'success': return '✅';
-      case 'error': return '❌';
-      case 'warning': return '⚠️';
-      case 'info': return 'ℹ️';
-      default: return 'ℹ️';
+      case 'success': return '成功';
+      case 'error': return '失败';
+      case 'warning': return '警告';
+      case 'info': return '信息';
+      default: return '信息';
     }
   };
 
