@@ -5,15 +5,34 @@ use tauri::Manager;
 // 获取ffmpeg可执行文件路径
 fn get_ffmpeg_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
     println!("开始查找ffmpeg可执行文件...");
+    println!("当前工作目录: {:?}", std::env::current_dir().unwrap_or_default());
     
-    // 1. 尝试本地resources目录（开发环境优先）
-    let local_ffmpeg = Path::new("resources").join("ffmpeg");
-    if local_ffmpeg.exists() {
-        println!("✅ 找到本地ffmpeg: {:?}", local_ffmpeg.canonicalize().unwrap_or(local_ffmpeg.clone()));
-        return Ok(local_ffmpeg);
+    // 尝试的路径列表
+    let possible_paths = vec![
+        // 1. 项目根目录下的ffmpeg（回退到父目录）
+        Path::new("../../../ffmpeg").to_path_buf(),
+        Path::new("../../ffmpeg").to_path_buf(), 
+        Path::new("../ffmpeg").to_path_buf(),
+        // 2. resources目录
+        Path::new("resources/ffmpeg").to_path_buf(),
+        Path::new("../resources/ffmpeg").to_path_buf(),
+        Path::new("../../resources/ffmpeg").to_path_buf(),
+        Path::new("../../../resources/ffmpeg").to_path_buf(),
+        // 3. 当前目录
+        Path::new("./ffmpeg").to_path_buf(),
+        Path::new("ffmpeg").to_path_buf(),
+    ];
+    
+    // 逐一检查路径
+    for path in &possible_paths {
+        if path.exists() {
+            let canonical_path = path.canonicalize().unwrap_or(path.clone());
+            println!("✅ 找到ffmpeg: {:?}", canonical_path);
+            return Ok(canonical_path);
+        }
     }
     
-    // 2. 尝试应用资源目录（生产环境）
+    // 4. 尝试应用资源目录（生产环境）
     if let Ok(resource_dir) = app_handle.path().resource_dir() {
         let ffmpeg_path = resource_dir.join("ffmpeg");
         if ffmpeg_path.exists() {
@@ -22,14 +41,7 @@ fn get_ffmpeg_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
         }
     }
     
-    // 3. 尝试当前目录
-    let current_ffmpeg = Path::new("./ffmpeg");
-    if current_ffmpeg.exists() {
-        println!("✅ 找到当前目录ffmpeg: {:?}", current_ffmpeg);
-        return Ok(current_ffmpeg.to_path_buf());
-    }
-    
-    // 4. 最后尝试系统PATH中的ffmpeg
+    // 5. 最后尝试系统PATH中的ffmpeg
     match which::which("ffmpeg") {
         Ok(path) => {
             println!("✅ 使用系统ffmpeg: {:?}", path);
@@ -38,11 +50,12 @@ fn get_ffmpeg_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
         Err(_) => {
             println!("❌ 未找到ffmpeg可执行文件");
             println!("尝试的路径:");
-            println!("  - {:?}", local_ffmpeg);
+            for path in &possible_paths {
+                println!("  - {:?} (存在: {})", path, path.exists());
+            }
             if let Ok(resource_dir) = app_handle.path().resource_dir() {
                 println!("  - {:?}", resource_dir.join("ffmpeg"));
             }
-            println!("  - {:?}", current_ffmpeg);
             println!("  - 系统PATH");
             Err("未找到ffmpeg可执行文件".to_string())
         }
@@ -77,17 +90,34 @@ pub async fn merge_video_audio(
         std::fs::create_dir_all(parent).map_err(|e| format!("创建输出目录失败: {}", e))?;
     }
     
-    // 运行ffmpeg命令
+    // 先检测音频格式，然后决定处理方式
     let mut cmd = Command::new(&ffmpeg_path);
-    cmd.args(&[
-        "-i", &video_path,          // 输入视频
-        "-i", &audio_path,          // 输入音频
-        "-c:v", "copy",             // 视频流复制（不重新编码）
-        "-c:a", "aac",              // 音频编码为AAC
-        "-strict", "experimental",   // 允许实验性编码器
-        "-y",                       // 覆盖输出文件
-        &output_path
-    ]);
+    
+    // 对于B站的M4S文件，使用更兼容的参数
+    if audio_path.ends_with(".m4s") || audio_path.ends_with(".mp3") {
+        cmd.args(&[
+            "-i", &video_path,          // 输入视频
+            "-i", &audio_path,          // 输入音频
+            "-c:v", "copy",             // 视频流复制
+            "-c:a", "aac",              // 音频重新编码为AAC（更兼容）
+            "-b:a", "128k",             // 音频比特率
+            "-movflags", "+faststart",   // 优化流媒体播放
+            "-avoid_negative_ts", "make_zero", // 避免负时间戳
+            "-y",                       // 覆盖输出文件
+            &output_path
+        ]);
+    } else {
+        // 其他格式使用复制模式
+        cmd.args(&[
+            "-i", &video_path,          
+            "-i", &audio_path,          
+            "-c:v", "copy",             
+            "-c:a", "copy",             
+            "-movflags", "+faststart",   
+            "-y",                       
+            &output_path
+        ]);
+    }
     
     println!("执行命令: {:?}", cmd);
     
