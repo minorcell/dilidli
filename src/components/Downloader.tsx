@@ -10,7 +10,7 @@ export default function Downloader() {
   const [showQualitySelector, setShowQualitySelector] = useState(false);
   const [streamData, setStreamData] = useState<PlayUrlData | null>(null);
   
-  const { downloads: downloadQueue, addDownloadItem, isLoggedIn, cookies } = useAppStore();
+  const { downloads: downloadQueue, addDownloadItem, updateDownloadProgress, updateDownloadStatus, isLoggedIn, cookies } = useAppStore();
   
   // 组件加载时的调试信息
   console.log('Downloader 组件已加载');
@@ -39,28 +39,8 @@ export default function Downloader() {
       }
     }
     return null;
-  };
-
-  // 简单的测试函数
-  const simpleTest = () => {
-    console.log('简单测试被调用了');
-    alert('按钮点击正常！');
-  };
-
-  // 测试 Tauri 连接的函数
-  const testTauriConnection = async () => {
-    console.log('=== 测试 Tauri 连接 ===');
-    alert('开始测试 Tauri 连接...');
-    try {
-      const result = await invoke('greet', { name: 'Test' });
-      console.log('Tauri 连接正常:', result);
-      alert(`Tauri 连接正常: ${result}`);
-    } catch (error) {
-      console.error('Tauri 连接失败:', error);
-      alert(`Tauri 连接失败: ${error}`);
-    }
-  };
-
+  };  
+  
   // 处理视频 URL 分析
   const handleAnalyzeVideo = async () => {
     console.log('=== 开始分析视频 ===');
@@ -160,20 +140,90 @@ export default function Downloader() {
 
   // 处理质量选择
   const handleQualitySelect = (videoStream: any, audioStream: any) => {
-    // 添加到下载队列
-    addDownloadItem({
+    if (!currentVideoData) return;
+
+    // 添加到下载队列，包含更多信息
+    const downloadItem = {
       id: Date.now().toString(),
       url: videoUrl,
-      title: currentVideoData?.title || '未知视频',
+      title: currentVideoData.title,
       progress: 0,
-      status: 'pending'
-    });
+      status: 'pending' as const,
+      // 额外的下载信息
+      videoData: currentVideoData,
+      selectedQuality: {
+        video: videoStream,
+        audio: audioStream
+      }
+    };
+
+    console.log('添加下载任务:', downloadItem);
+    addDownloadItem(downloadItem);
+
+    // 不立即开始下载，让用户手动点击开始
+    // startDownload(downloadItem);
 
     // 重置状态
     setVideoUrl('');
     setCurrentVideoData(null);
     setStreamData(null);
     setShowQualitySelector(false);
+  };
+
+  // 测试流URL的可访问性
+  const testStreamUrl = async (url?: string) => {
+    if (!url) {
+      alert('URL为空');
+      return;
+    }
+
+    if (!isTauriAvailable()) {
+      alert('请在Tauri应用中使用此功能');
+      return;
+    }
+
+    try {
+      console.log('测试URL:', url);
+      const result = await invoke('test_stream_url', { url, cookies });
+      console.log('测试结果:', result);
+      alert(`URL测试成功: ${result}`);
+    } catch (error) {
+      console.error('URL测试失败:', error);
+      alert(`URL测试失败: ${error}`);
+    }
+  };
+
+  // 开始下载任务
+  const startDownload = async (downloadItem: any) => {
+    console.log('开始下载:', downloadItem);
+    
+    if (!isTauriAvailable()) {
+      console.error('Tauri 环境不可用');
+      updateDownloadStatus(downloadItem.id, 'failed');
+      return;
+    }
+
+    try {
+      // 更新状态为下载中
+      updateDownloadStatus(downloadItem.id, 'downloading');
+      updateDownloadProgress(downloadItem.id, 0);
+
+      // 调用后端下载函数
+      const result = await invoke('download_video', {
+        videoData: downloadItem.videoData,
+        videoStream: downloadItem.selectedQuality.video,
+        audioStream: downloadItem.selectedQuality.audio,
+        cookies: cookies
+      });
+
+      console.log('下载完成:', result);
+      updateDownloadStatus(downloadItem.id, 'completed');
+      updateDownloadProgress(downloadItem.id, 100);
+    } catch (error) {
+      console.error('下载失败:', error);
+      updateDownloadStatus(downloadItem.id, 'failed');
+      alert(`下载失败：${error}`);
+    }
   };
 
   // 处理 Enter 键
@@ -213,31 +263,6 @@ export default function Downloader() {
                 className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 {isAnalyzing ? '分析中...' : '解析'}
-              </button>
-            </div>
-            
-            {/* 调试按钮区域 */}
-            <div className="flex space-x-2 mt-2">
-              <button
-                onClick={() => {
-                  console.log('内联按钮被点击');
-                  alert('内联按钮正常工作！');
-                }}
-                className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
-              >
-                内联测试
-              </button>
-              <button
-                onClick={simpleTest}
-                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-              >
-                函数测试
-              </button>
-              <button
-                onClick={testTauriConnection}
-                className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
-              >
-                Tauri测试
               </button>
             </div>
           </div>
@@ -302,12 +327,20 @@ export default function Downloader() {
                       </span>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleQualitySelect(videoStream, streamData.audio_streams[0])}
-                    className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                  >
-                    选择
-                  </button>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => testStreamUrl(videoStream.url)}
+                      className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs"
+                    >
+                      测试
+                    </button>
+                    <button
+                      onClick={() => handleQualitySelect(videoStream, streamData.audio_streams[0])}
+                      className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                    >
+                      选择
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -350,17 +383,38 @@ export default function Downloader() {
                   <h3 className="font-medium text-gray-900 dark:text-white truncate flex-1">
                     {item.title}
                   </h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    item.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-                    item.status === 'downloading' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-                    item.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
-                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                  }`}>
-                    {item.status === 'pending' ? '等待中' :
-                     item.status === 'downloading' ? '下载中' :
-                     item.status === 'completed' ? '已完成' :
-                     item.status === 'failed' ? '失败' : item.status}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      item.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                      item.status === 'downloading' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                      item.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                    }`}>
+                      {item.status === 'pending' ? '等待中' :
+                       item.status === 'downloading' ? '下载中' :
+                       item.status === 'completed' ? '已完成' :
+                       item.status === 'failed' ? '失败' : item.status}
+                    </span>
+                    {item.status === 'pending' && (
+                      <button
+                        onClick={() => startDownload(item)}
+                        className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                      >
+                        开始
+                      </button>
+                    )}
+                    {item.status === 'failed' && (
+                      <button
+                        onClick={() => {
+                          updateDownloadStatus(item.id, 'pending');
+                          startDownload(item);
+                        }}
+                        className="px-2 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600"
+                      >
+                        重试
+                      </button>
+                    )}
+                  </div>
                 </div>
                 
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 truncate">
