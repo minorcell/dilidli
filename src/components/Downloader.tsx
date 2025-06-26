@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useAppStore } from '../store/appStore';
-import { VideoData, PlayUrlData, FileInfo, ExportOptions } from '../types/bilibili';
+import { VideoData, PlayUrlData} from '../types/bilibili';
+import CustomSelect from './ui/CustomSelect';
 
 export default function Downloader() {
   const [videoUrl, setVideoUrl] = useState('');
@@ -10,8 +11,6 @@ export default function Downloader() {
   const [showQualitySelector, setShowQualitySelector] = useState(false);
   const [streamData, setStreamData] = useState<PlayUrlData | null>(null);
   const [exportFolder, setExportFolder] = useState<string>('');
-  const [showExportDialog, setShowExportDialog] = useState(false);
-  const [selectedFileForExport, setSelectedFileForExport] = useState<string>('');
   
   const { downloads: downloadQueue, addDownloadItem, updateDownloadProgress, updateDownloadStatus, isLoggedIn, cookies } = useAppStore();
 
@@ -125,26 +124,6 @@ export default function Downloader() {
     setCurrentVideoData(null);
     setStreamData(null);
     setShowQualitySelector(false);
-  };
-
-  // 测试流URL的可访问性
-  const testStreamUrl = async (url?: string) => {
-    if (!url) {
-      alert('URL为空');
-      return;
-    }
-
-    if (!isTauriAvailable()) {
-      alert('请在Tauri应用中使用此功能');
-      return;
-    }
-
-    try {
-      const result = await invoke('test_stream_url', { url, cookies });
-      alert(`URL测试成功: ${result}`);
-    } catch (error) {
-      alert(`URL测试失败: ${error}`);
-    }
   };
 
   // 开始下载任务
@@ -356,7 +335,7 @@ export default function Downloader() {
 
         {/* 质量选择器 */}
         {showQualitySelector && currentVideoData && streamData && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
             <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-6">
               <h2 className="text-2xl font-bold text-white">
                 选择下载质量
@@ -389,43 +368,24 @@ export default function Downloader() {
               </div>
 
               {/* 清晰度选择下拉菜单 */}
-              <div className="space-y-4">
+              <div className="space-y-4 relative">
                 <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
                   选择清晰度：
                 </label>
-                <select
-                  onChange={(e) => {
-                    const selectedIndex = parseInt(e.target.value);
-                    const selectedVideo = streamData.video_streams[selectedIndex];
+                <CustomSelect
+                  options={streamData.video_streams.map((videoStream, index) => ({
+                    value: index,
+                    label: videoStream.description,
+                    description: videoStream.format ? `格式: ${videoStream.format}` : undefined,
+                    filesize: videoStream.filesize
+                  }))}
+                  onChange={(selectedIndex) => {
+                    const selectedVideo = streamData.video_streams[selectedIndex as number];
                     const selectedAudio = streamData.audio_streams[0];
                     handleQualitySelect(selectedVideo, selectedAudio);
                   }}
-                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white bg-white text-lg transition-all"
-                  defaultValue=""
-                >
-                  <option value="" disabled>🎯 请选择视频清晰度</option>
-                  {streamData.video_streams.map((videoStream, index) => (
-                    <option key={index} value={index}>
-                      📺 {videoStream.description}
-                      {videoStream.filesize && ` (${(videoStream.filesize / 1024 / 1024).toFixed(1)} MB)`}
-                    </option>
-                  ))}
-                </select>
-                
-                {/* 测试按钮 */}
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => {
-                      const firstStream = streamData.video_streams[0];
-                      if (firstStream?.url) {
-                        testStreamUrl(firstStream.url);
-                      }
-                    }}
-                    className="px-6 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm border border-gray-300 dark:border-gray-600 transition-all"
-                  >
-                    🔍 测试链接可用性
-                  </button>
-                </div>
+                  placeholder="请选择视频清晰度"
+                />
               </div>
 
               <div className="flex justify-end space-x-3">
