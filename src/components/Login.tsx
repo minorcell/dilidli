@@ -17,7 +17,7 @@ const isTauriAvailable = () => {
 export default function Login({ onClose }: LoginProps) {
   const [qrData, setQrData] = useState<QrCodeData | null>(null);
   const [loginStatus, setLoginStatus] = useState<'idle' | 'loading' | 'polling' | 'success' | 'error'>('idle');
-  const [statusMessage, setStatusMessage] = useState('点击获取登录二维码');
+  const [statusMessage, setStatusMessage] = useState('');
   const [pollInterval, setPollInterval] = useState<number | null>(null);
   
   const { setLoginStatus: setGlobalLoginStatus } = useAppStore();
@@ -26,7 +26,10 @@ export default function Login({ onClose }: LoginProps) {
   useEffect(() => {
     if (!isTauriAvailable()) {
       setLoginStatus('error');
-      setStatusMessage('请在 Tauri 应用中使用登录功能（运行 pnpm tauri dev）');
+      setStatusMessage('请在 Tauri 应用中使用登录功能');
+    } else {
+      // 自动获取二维码
+      getQrCode();
     }
   }, []);
 
@@ -49,7 +52,7 @@ export default function Login({ onClose }: LoginProps) {
 
     try {
       setLoginStatus('loading');
-      setStatusMessage('获取二维码中...');
+      setStatusMessage('正在获取登录二维码...');
       
       const qrCodeData: QrCodeData = await invoke('get_login_qr_code');
       
@@ -74,139 +77,274 @@ export default function Login({ onClose }: LoginProps) {
         
         switch (code) {
           case LoginStatus.PENDING:
-            setStatusMessage('等待扫码...');
+            setStatusMessage('等待扫码中...');
             break;
           case LoginStatus.SCANNED:
-            setStatusMessage('已扫码，请在手机上确认登录');
+            setStatusMessage('扫码成功！请在手机上确认登录');
             break;
           case LoginStatus.SUCCESS:
-            setStatusMessage('登录成功！');
+            setStatusMessage('登录成功！正在跳转...');
             setLoginStatus('success');
             clearInterval(interval);
             
-            // 设置全局登录状态，但不立即保存
+            // 设置全局登录状态
             try {
               setGlobalLoginStatus(true, { name: '用户', avatar: '', mid: 0, vip_type: 0 }, result.cookies);
             } catch (error) {
+              console.error('设置登录状态失败:', error);
             }
             
             setTimeout(() => {
               onClose?.();
-            }, 1000);
+            }, 1500);
             break;
           case LoginStatus.EXPIRED:
-            setStatusMessage('二维码已过期，请重新获取');
+            setStatusMessage('二维码已过期');
             setLoginStatus('error');
             clearInterval(interval);
             break;
           default:
-            setStatusMessage(`未知状态: ${result.poll_data.message}`);
+            setStatusMessage(`状态: ${result.poll_data.message}`);
             break;
         }
       } catch (error) {
-        setStatusMessage('网络错误，请重试');
+        setStatusMessage('网络连接错误，请检查网络');
         setLoginStatus('error');
         clearInterval(interval);
       }
-    }, 2000); // 每2秒轮询一次
+    }, 2000);
 
     setPollInterval(interval);
   };
 
-  // 重置状态
-  const resetState = () => {
+  // 重新获取二维码
+  const refreshQrCode = () => {
     if (pollInterval) {
       clearInterval(pollInterval);
       setPollInterval(null);
     }
     setQrData(null);
     setLoginStatus('idle');
-    setStatusMessage('点击获取登录二维码');
+    setStatusMessage('');
+    getQrCode();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">登录哔哩哔哩</h2>
+    <div className="fixed inset-0 z-50 flex">
+      {/* 左侧装饰区域 */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 relative overflow-hidden">
+        {/* 装饰性几何图形 */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+          <div className="absolute top-1/3 right-20 w-24 h-24 bg-white/15 rounded-2xl rotate-45 blur-lg"></div>
+          <div className="absolute bottom-32 left-1/3 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-20 right-1/4 w-20 h-20 bg-white/20 rounded-xl rotate-12 blur-md"></div>
+        </div>
+        
+        {/* 主要内容 */}
+        <div className="relative z-10 flex flex-col justify-center items-center text-white p-12">
+          <div className="text-center mb-8">
+            <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
+              <span className="text-5xl">🎬</span>
+            </div>
+            <h1 className="text-5xl font-bold mb-4">CiliCili</h1>
+            <p className="text-xl text-white/90 mb-8">哔哩哔哩桌面下载器</p>
+          </div>
+          
+          {/* 特性介绍 */}
+          <div className="space-y-4 max-w-sm">
+            <div className="flex items-center space-x-3 text-white/90">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <span>🎯</span>
+              </div>
+              <span>高质量视频下载</span>
+            </div>
+            <div className="flex items-center space-x-3 text-white/90">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <span>⚡</span>
+              </div>
+              <span>极速下载体验</span>
+            </div>
+            <div className="flex items-center space-x-3 text-white/90">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <span>🛡️</span>
+              </div>
+              <span>安全隐私保护</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 右侧登录区域 */}
+      <div className="w-full lg:w-1/2 bg-white dark:bg-gray-900 flex flex-col">
+        {/* 头部 */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-blue-500 rounded-xl flex items-center justify-center lg:hidden">
+              <span className="text-white text-xl">🎬</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">登录账户</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">使用哔哩哔哩账号登录</p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            className="w-10 h-10 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors"
           >
-            ✕
+            <span className="text-gray-500 dark:text-gray-400 text-lg">✕</span>
           </button>
         </div>
 
-        <div className="text-center space-y-4">
-          {/* Tauri 环境检查提示 */}
+        {/* 主要内容区域 */}
+        <div className="flex-1 flex flex-col justify-center p-8 lg:p-12">
+          
+          {/* Tauri 环境检查 */}
           {!isTauriAvailable() && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <div className="flex items-center space-x-2 text-yellow-800 dark:text-yellow-200">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium">开发环境提示</span>
+            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-2xl">
+              <div className="flex items-start space-x-3">
+                <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-white text-sm">!</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
+                    开发环境提示
+                  </h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    当前在浏览器环境中运行，登录功能需要桌面应用支持。
+                    <br />
+                    请运行 <code className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded font-mono">pnpm tauri dev</code> 启动桌面应用。
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-2">
-                当前在浏览器环境中，登录功能需要在 Tauri 应用中使用。<br/>
-                请运行 <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">pnpm tauri dev</code> 启动完整应用。
-              </p>
             </div>
           )}
 
-          {/* 二维码区域 */}
-          <div className="flex justify-center items-center h-64 bg-gray-100 dark:bg-gray-700 rounded-lg">
-            {qrData ? (
-              <QRCodeSVG
-                value={qrData.url}
-                size={200}
-                level="M"
-                includeMargin={true}
-              />
-            ) : (
-              <div className="text-gray-500 dark:text-gray-400">
-                {loginStatus === 'loading' ? '获取中...' : '暂无二维码'}
+          <div className="max-w-sm mx-auto w-full space-y-8">
+            
+            {/* 二维码区域 */}
+            <div className="text-center">
+              <div className="relative inline-block p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-3xl shadow-inner">
+                {qrData ? (
+                  <div className="relative">
+                    <QRCodeSVG
+                      value={qrData.url}
+                      size={200}
+                      level="M"
+                      includeMargin={true}
+                      className="rounded-2xl shadow-sm"
+                    />
+                    {/* 状态指示器 */}
+                    <div className="absolute -bottom-2 -right-2">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
+                        loginStatus === 'polling' && "bg-blue-500 animate-pulse",
+                        loginStatus === 'success' && "bg-green-500",
+                        loginStatus === 'error' && "bg-red-500"
+                      )}>
+                        <span className="text-white text-sm">
+                          {loginStatus === 'polling' && '📱'}
+                          {loginStatus === 'success' && '✅'}
+                          {loginStatus === 'error' && '❌'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-[200px] h-[200px] flex items-center justify-center">
+                    {loginStatus === 'loading' ? (
+                      <div className="text-center space-y-4">
+                        <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">正在生成二维码...</p>
+                      </div>
+                    ) : loginStatus === 'error' ? (
+                      <div className="text-center space-y-4">
+                        <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto">
+                          <span className="text-2xl">❌</span>
+                        </div>
+                        <p className="text-red-600 dark:text-red-400 text-sm">二维码获取失败</p>
+                      </div>
+                    ) : (
+                      <div className="text-center space-y-4">
+                        <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto">
+                          <span className="text-2xl">📱</span>
+                        </div>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">准备获取二维码</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* 状态信息 */}
-          <p className={cn(
-            "text-sm",
-            loginStatus === 'success' && "text-green-600",
-            loginStatus === 'error' && "text-red-600",
-            loginStatus === 'polling' && "text-blue-600"
-          )}>
-            {statusMessage}
-          </p>
+            {/* 状态信息 */}
+            <div className="text-center space-y-4">
+              <div className={cn(
+                "inline-flex items-center space-x-2 px-4 py-3 rounded-2xl text-sm font-medium transition-all",
+                loginStatus === 'success' && "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                loginStatus === 'error' && "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+                loginStatus === 'polling' && "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                loginStatus === 'loading' && "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+                loginStatus === 'idle' && "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+              )}>
+                <span>
+                  {loginStatus === 'success' && '🎉'}
+                  {loginStatus === 'error' && '⚠️'}
+                  {loginStatus === 'polling' && '📱'}
+                  {loginStatus === 'loading' && '⏳'}
+                  {loginStatus === 'idle' && '🔄'}
+                </span>
+                <span>
+                  {statusMessage || 
+                    (loginStatus === 'idle' ? '准备获取登录二维码' : 
+                     loginStatus === 'loading' ? '正在生成二维码...' : 
+                     statusMessage)}
+                </span>
+              </div>
 
-          {/* 操作按钮 */}
-          <div className="space-y-2">
-            {(loginStatus === 'idle' || loginStatus === 'error') && (
-              <button
-                onClick={getQrCode}
-                disabled={!isTauriAvailable()}
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                获取登录二维码
-              </button>
-            )}
-            {loginStatus === 'loading' && (
-              <button
-                disabled
-                className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg opacity-50 cursor-not-allowed"
-              >
-                获取中...
-              </button>
-            )}
-            {loginStatus === 'polling' && (
-              <button
-                onClick={resetState}
-                className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-              >
-                重新获取二维码
-              </button>
-            )}
+              {/* 操作按钮 */}
+              <div className="space-y-3">
+                {loginStatus === 'error' && (
+                  <button
+                    onClick={refreshQrCode}
+                    disabled={!isTauriAvailable()}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-blue-500 text-white rounded-xl hover:from-pink-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2"
+                  >
+                    <span>🔄</span>
+                    <span>重新获取二维码</span>
+                  </button>
+                )}
+                
+                {loginStatus === 'polling' && (
+                  <button
+                    onClick={refreshQrCode}
+                    className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all flex items-center justify-center space-x-2"
+                  >
+                    <span>🔄</span>
+                    <span>刷新二维码</span>
+                  </button>
+                )}
+                
+                {loginStatus === 'success' && (
+                  <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
+                    <div className="animate-bounce">🎉</div>
+                    <span className="font-semibold">登录成功！正在初始化...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 底部说明 */}
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                <span>💡</span>
+                <span>使用哔哩哔哩手机App扫描上方二维码</span>
+              </div>
+              <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                <span>🔒</span>
+                <span>登录信息将安全存储在本地</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

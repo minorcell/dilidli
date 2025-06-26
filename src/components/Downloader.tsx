@@ -19,7 +19,6 @@ export default function Downloader() {
 
   // 提取视频 ID 的函数
   const extractVideoId = (url: string): string | null => {
-    // 支持多种 B站 URL 格式
     const patterns = [
       /(?:https?:\/\/)?(?:www\.)?bilibili\.com\/video\/(BV[a-zA-Z0-9]+)/,
       /(?:https?:\/\/)?(?:www\.)?bilibili\.com\/video\/av(\d+)/,
@@ -59,11 +58,9 @@ export default function Downloader() {
     setIsAnalyzing(true);
 
     try {
-      // 调用后端获取视频信息
       const videoData: VideoData = await invoke('get_video_info', { videoId });
       setCurrentVideoData(videoData);
       
-      // 如果用户已登录，获取视频流信息
       if (isLoggedIn && cookies) {
         try {
           const streamData: PlayUrlData = await invoke('get_video_streams', {
@@ -85,7 +82,6 @@ export default function Downloader() {
           alert(`获取视频流失败：${streamError}`);
         }
       } else {
-        // 未登录时提示用户登录
         alert('请先登录以获取视频下载链接');
         addDownloadItem({
           id: Date.now().toString(),
@@ -107,14 +103,12 @@ export default function Downloader() {
   const handleQualitySelect = (videoStream: any, audioStream: any) => {
     if (!currentVideoData) return;
 
-    // 添加到下载队列，包含更多信息
     const downloadItem = {
       id: Date.now().toString(),
       url: videoUrl,
       title: currentVideoData.title,
       progress: 0,
       status: 'pending' as const,
-      // 额外的下载信息
       videoData: currentVideoData,
       selectedQuality: {
         video: videoStream,
@@ -124,10 +118,6 @@ export default function Downloader() {
 
     addDownloadItem(downloadItem);
 
-    // 不立即开始下载，让用户手动点击开始
-    // startDownload(downloadItem);
-
-    // 重置状态
     setVideoUrl('');
     setCurrentVideoData(null);
     setStreamData(null);
@@ -162,14 +152,12 @@ export default function Downloader() {
       return;
     }
 
-    // 检查是否有必要的下载数据
     if (!downloadItem.videoData || !downloadItem.selectedQuality) {
       updateDownloadStatus(downloadItem.id, 'failed');
       alert('下载信息不完整，请重新解析视频');
       return;
     }
 
-    // 检查登录状态和cookies
     if (!isLoggedIn || !cookies) {
       updateDownloadStatus(downloadItem.id, 'failed');
       alert('请先登录后再下载');
@@ -177,11 +165,9 @@ export default function Downloader() {
     }
 
     try {
-      // 更新状态为下载中
       updateDownloadStatus(downloadItem.id, 'downloading');
       updateDownloadProgress(downloadItem.id, 0);
 
-      // 调用后端下载函数
       const result = await invoke('download_video', {
         videoData: downloadItem.videoData,
         videoStream: downloadItem.selectedQuality.video,
@@ -206,211 +192,245 @@ export default function Downloader() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* 视频链接输入区域 */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          添加下载任务
-        </h2>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-6xl mx-auto py-8 px-4 space-y-8">
         
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="video-url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              视频链接或 BV 号
-            </label>
-            <div className="flex space-x-2">
-              <input
-                id="video-url"
-                type="text"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="https://www.bilibili.com/video/BV... 或直接输入 BV 号"
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                disabled={isAnalyzing}
-              />
-              <button
-                onClick={handleAnalyzeVideo}
-                disabled={isAnalyzing || !videoUrl.trim()}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                {isAnalyzing ? '分析中...' : '解析'}
-              </button>
+        {/* 页面标题 */}
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-pink-500 to-blue-500 rounded-full mb-4 shadow-lg">
+            <span className="text-3xl">🎬</span>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-blue-500 bg-clip-text text-transparent mb-2">
+            CiliCili 下载器
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            高质量下载你喜欢的B站视频
+          </p>
+        </div>
+
+        {/* 视频链接输入区域 */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-gradient-to-r from-pink-500 to-blue-500 p-6">
+            <div className="flex items-center">
+              <div className="w-2 h-8 bg-white rounded mr-4 opacity-80"></div>
+              <h2 className="text-2xl font-bold text-white">
+                添加下载任务
+              </h2>
             </div>
           </div>
           
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            <p>支持的格式：</p>
-            <ul className="list-disc list-inside mt-1 space-y-1">
-              <li>完整链接：https://www.bilibili.com/video/BV1qEVazqEv3</li>
-              <li>短链接：https://b23.tv/xxx</li>
-              <li>直接输入：BV1qEVazqEv3</li>
-              <li>AV 号：av123456</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* 质量选择器 */}
-      {showQualitySelector && currentVideoData && streamData && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            选择下载质量
-          </h2>
-          
-          {/* 视频信息预览 */}
-          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <div className="flex space-x-4">
-              <img
-                src={currentVideoData.pic}
-                alt={currentVideoData.title}
-                className="w-32 h-20 object-cover rounded"
-              />
-              <div className="flex-1">
-                <h3 className="font-medium text-gray-900 dark:text-white mb-1">
-                  {currentVideoData.title}
-                </h3>
-                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                   UP主: {currentVideoData.owner_info?.name || '未知'}
-                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  时长: {Math.floor(currentVideoData.duration / 60)}分{currentVideoData.duration % 60}秒
-                </p>
+          <div className="p-8 space-y-6">
+            <div>
+              <label htmlFor="video-url" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                视频链接或 BV 号
+              </label>
+              <div className="flex space-x-3">
+                <input
+                  id="video-url"
+                  type="text"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="https://www.bilibili.com/video/BV... 或直接输入 BV 号"
+                  className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
+                  disabled={isAnalyzing}
+                />
+                <button
+                  onClick={handleAnalyzeVideo}
+                  disabled={isAnalyzing || !videoUrl.trim()}
+                  className="px-8 py-3 bg-gradient-to-r from-pink-500 to-blue-500 text-white rounded-xl hover:from-pink-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all shadow-lg hover:shadow-xl"
+                >
+                  {isAnalyzing ? '分析中...' : '🔍 解析'}
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">支持的格式：</p>
+              <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <div>• 完整链接：https://www.bilibili.com/video/BV...</div>
+                <div>• 短链接：https://b23.tv/xxx</div>
+                <div>• 直接输入：BV1qEVazqEv3</div>
+                <div>• AV 号：av123456</div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* 质量选项 */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900 dark:text-white">可用质量：</h4>
-            {streamData.video_streams.map((videoStream, index) => (
-              <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {videoStream.description}
-                    </span>
-                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                      ({videoStream.format})
-                    </span>
-                    {videoStream.filesize && (
-                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                        - {(videoStream.filesize / 1024 / 1024).toFixed(1)} MB
+        {/* 质量选择器 */}
+        {showQualitySelector && currentVideoData && streamData && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-6">
+              <h2 className="text-2xl font-bold text-white">
+                选择下载质量
+              </h2>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              {/* 视频信息预览 */}
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6">
+                <div className="flex space-x-6">
+                  <img
+                    src={currentVideoData.pic}
+                    alt={currentVideoData.title}
+                    className="w-40 h-24 object-cover rounded-lg shadow-lg"
+                  />
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      {currentVideoData.title}
+                    </h3>
+                    <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="flex items-center">
+                        👤 {currentVideoData.owner_info?.name || '未知'}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => testStreamUrl(videoStream.url)}
-                      className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs"
-                    >
-                      测试
-                    </button>
-                    <button
-                      onClick={() => handleQualitySelect(videoStream, streamData.audio_streams[0])}
-                      className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                    >
-                      选择
-                    </button>
+                      <span className="flex items-center">
+                        ⏱️ {Math.floor(currentVideoData.duration / 60)}分{currentVideoData.duration % 60}秒
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={() => {
-                setShowQualitySelector(false);
-                setCurrentVideoData(null);
-                setStreamData(null);
-              }}
-              className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-            >
-              取消
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 下载队列 */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          下载队列 ({downloadQueue.length})
-        </h2>
-        
-        {downloadQueue.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <svg className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-            </svg>
-            <p>暂无下载任务</p>
-            <p className="text-sm mt-1">添加视频链接开始下载</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {downloadQueue.map((item) => (
-              <div key={item.id} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium text-gray-900 dark:text-white truncate flex-1">
-                    {item.title}
-                  </h3>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-                      item.status === 'downloading' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-                      item.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
-                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
-                    }`}>
-                      {item.status === 'pending' ? '等待中' :
-                       item.status === 'downloading' ? '下载中' :
-                       item.status === 'completed' ? '已完成' :
-                       item.status === 'failed' ? '失败' : item.status}
-                    </span>
-                    {item.status === 'pending' && (
-                      <button
-                        onClick={() => startDownload(item)}
-                        className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
-                      >
-                        开始
-                      </button>
-                    )}
-                    {item.status === 'failed' && (
-                      <button
-                        onClick={() => {
-                          updateDownloadStatus(item.id, 'pending');
-                          startDownload(item);
-                        }}
-                        className="px-2 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600"
-                      >
-                        重试
-                      </button>
-                    )}
-                  </div>
+              {/* 清晰度选择下拉菜单 */}
+              <div className="space-y-4">
+                <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  选择清晰度：
+                </label>
+                <select
+                  onChange={(e) => {
+                    const selectedIndex = parseInt(e.target.value);
+                    const selectedVideo = streamData.video_streams[selectedIndex];
+                    const selectedAudio = streamData.audio_streams[0];
+                    handleQualitySelect(selectedVideo, selectedAudio);
+                  }}
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white bg-white text-lg transition-all"
+                  defaultValue=""
+                >
+                  <option value="" disabled>🎯 请选择视频清晰度</option>
+                  {streamData.video_streams.map((videoStream, index) => (
+                    <option key={index} value={index}>
+                      📺 {videoStream.description}
+                      {videoStream.filesize && ` (${(videoStream.filesize / 1024 / 1024).toFixed(1)} MB)`}
+                    </option>
+                  ))}
+                </select>
+                
+                {/* 测试按钮 */}
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => {
+                      const firstStream = streamData.video_streams[0];
+                      if (firstStream?.url) {
+                        testStreamUrl(firstStream.url);
+                      }
+                    }}
+                    className="px-6 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm border border-gray-300 dark:border-gray-600 transition-all"
+                  >
+                    🔍 测试链接可用性
+                  </button>
                 </div>
-                
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 truncate">
-                  {item.url}
-                </p>
-                
-                {item.status === 'downloading' ? (
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div 
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${item.progress}%` }}
-                    ></div>
-                  </div>
-                ) : null}
-                
-                {item.progress > 0 && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    进度: {item.progress}%
-                  </p>
-                )}
               </div>
-            ))}
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowQualitySelector(false);
+                    setCurrentVideoData(null);
+                    setStreamData(null);
+                  }}
+                  className="px-6 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 rounded-lg transition-all"
+                >
+                  取消
+                </button>
+              </div>
+            </div>
           </div>
         )}
+
+        {/* 下载队列 */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="bg-gradient-to-r from-green-500 to-teal-500 p-6">
+            <h2 className="text-2xl font-bold text-white">
+              下载队列 ({downloadQueue.length})
+            </h2>
+          </div>
+          
+          <div className="p-8">
+            {downloadQueue.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <span className="text-4xl">📥</span>
+                </div>
+                <p className="text-xl font-medium mb-2">暂无下载任务</p>
+                <p className="text-gray-400">添加视频链接开始下载</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {downloadQueue.map((item) => (
+                  <div key={item.id} className="border-2 border-gray-100 dark:border-gray-700 rounded-xl p-6 hover:border-blue-200 dark:hover:border-blue-700 transition-all">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-bold text-gray-900 dark:text-white truncate flex-1 text-lg">
+                        {item.title}
+                      </h3>
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          item.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                          item.status === 'downloading' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+                          item.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                        }`}>
+                          {item.status === 'pending' ? '⏳ 等待中' :
+                           item.status === 'downloading' ? '⬇️ 下载中' :
+                           item.status === 'completed' ? '✅ 已完成' :
+                           item.status === 'failed' ? '❌ 失败' : item.status}
+                        </span>
+                        {item.status === 'pending' && (
+                          <button
+                            onClick={() => startDownload(item)}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-sm hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg"
+                          >
+                            🚀 开始
+                          </button>
+                        )}
+                        {item.status === 'failed' && (
+                          <button
+                            onClick={() => {
+                              updateDownloadStatus(item.id, 'pending');
+                              startDownload(item);
+                            }}
+                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-sm hover:from-orange-600 hover:to-red-600 transition-all shadow-lg"
+                          >
+                            🔄 重试
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 truncate">
+                      🔗 {item.url}
+                    </p>
+                    
+                    {item.status === 'downloading' && (
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-300"
+                          style={{ width: `${item.progress}%` }}
+                        ></div>
+                      </div>
+                    )}
+                    
+                    {item.progress > 0 && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        📊 进度: {item.progress}%
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+        
       </div>
     </div>
   );
