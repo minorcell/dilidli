@@ -153,7 +153,7 @@ function App() {
                   onClick={handleLogin}
                   className="px-6 py-3 bg-gradient-to-r from-pink-500 to-blue-500 text-white rounded-xl hover:from-pink-600 hover:to-blue-600 text-sm font-semibold shadow-lg hover:shadow-xl transition-all"
                 >
-                  🔑 立即登录
+                  立即登录
                 </button>
               )}
             </div>
@@ -220,7 +220,7 @@ function App() {
                 onClick={handleLogin}
                 className="px-12 py-4 bg-gradient-to-r from-pink-500 to-blue-500 text-white rounded-2xl hover:from-pink-600 hover:to-blue-600 font-bold text-lg shadow-2xl hover:shadow-3xl transition-all transform hover:scale-105"
               >
-                🔑 立即登录开始使用
+                立即登录开始使用
               </button>
               
               <p className="text-sm text-gray-500 dark:text-gray-500 mt-4">

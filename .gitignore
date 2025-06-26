@@ -27,3 +27,12 @@ dist-ssr
 .DS_Store
 DS_Store
 vscode
+
+# Build outputs
+target/
+*.dmg
+dmg-build/
+*.app
+
+# FFmpeg binary (will be downloaded automatically)
+resources/ffmpeg
