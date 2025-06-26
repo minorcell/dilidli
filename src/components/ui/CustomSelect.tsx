@@ -81,7 +81,6 @@ export default function CustomSelect({
         <div className="flex items-center space-x-3 min-w-0 flex-1">
           {selectedOption ? (
             <>
-              <span className="text-2xl">📺</span>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold truncate">{selectedOption.label}</div>
                 {selectedOption.filesize && (
@@ -93,7 +92,6 @@ export default function CustomSelect({
             </>
           ) : (
             <>
-              <span className="text-2xl">🎯</span>
               <span>{placeholder}</span>
             </>
           )}
@@ -139,7 +137,6 @@ export default function CustomSelect({
                 `}
               >
                 <div className="flex items-center space-x-4">
-                  <span className="text-2xl">📺</span>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-base mb-1 truncate">
                       {option.label}
@@ -151,7 +148,7 @@ export default function CustomSelect({
                     )}
                     {option.filesize && (
                       <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                        💾 {(option.filesize / 1024 / 1024).toFixed(1)} MB
+                        大小：{(option.filesize / 1024 / 1024).toFixed(1)} MB
                       </div>
                     )}
                   </div>

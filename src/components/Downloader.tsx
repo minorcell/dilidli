@@ -346,10 +346,10 @@ export default function Downloader() {
                     </h3>
                     <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                       <span className="flex items-center">
-                        👤 {currentVideoData.owner_info?.name || '未知'}
+                        UP主：{currentVideoData.owner_info?.name || '未知'}
                       </span>
                       <span className="flex items-center">
-                        ⏱️ {Math.floor(currentVideoData.duration / 60)}分{currentVideoData.duration % 60}秒
+                        时长：{Math.floor(currentVideoData.duration / 60)}分{currentVideoData.duration % 60}秒
                       </span>
                     </div>
                   </div>
@@ -405,19 +405,19 @@ export default function Downloader() {
                   onClick={selectExportFolder}
                   className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-all"
                 >
-                  📁 选择导出文件夹
+                  选择导出文件夹
                 </button>
                 <button
                   onClick={() => openFolder(exportFolder || '')}
                   disabled={!exportFolder}
                   className="px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-all"
                 >
-                  🔗 打开文件夹
+                  打开文件夹
                 </button>
               </div>
             </div>
             {exportFolder && (
-              <p className="text-white/80 text-sm mt-2">📂 当前导出文件夹: {exportFolder}</p>
+              <p className="text-white/80 text-sm mt-2">当前导出文件夹: {exportFolder}</p>
             )}
           </div>
           
@@ -445,17 +445,17 @@ export default function Downloader() {
                           item.status === 'failed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
                           'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                         }`}>
-                          {item.status === 'pending' ? '⏳ 等待中' :
-                           item.status === 'downloading' ? '⬇️ 下载中' :
-                           item.status === 'completed' ? '✅ 已完成' :
-                           item.status === 'failed' ? '❌ 失败' : item.status}
+                          {item.status === 'pending' ? '等待中' :
+                           item.status === 'downloading' ? '下载中' :
+                           item.status === 'completed' ? '已完成' :
+                           item.status === 'failed' ? '失败' : item.status}
                         </span>
                         {item.status === 'pending' && (
                           <button
                             onClick={() => startDownload(item)}
                             className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-sm hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg"
                           >
-                            🚀 开始
+                            开始
                           </button>
                         )}
                         {item.status === 'failed' && (
@@ -466,7 +466,7 @@ export default function Downloader() {
                             }}
                             className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-sm hover:from-orange-600 hover:to-red-600 transition-all shadow-lg"
                           >
-                            🔄 重试
+                            重试
                           </button>
                         )}
                         {item.status === 'completed' && (
@@ -475,19 +475,19 @@ export default function Downloader() {
                               onClick={() => exportFileToFolder(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`)}
                               className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-xs hover:from-blue-600 hover:to-purple-600 transition-all"
                             >
-                              📤 导出
+                              导出
                             </button>
                             <button
                               onClick={() => convertVideoFormat(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`, 'avi')}
                               className="px-3 py-1 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg text-xs hover:from-green-600 hover:to-teal-600 transition-all"
                             >
-                              🔄 转换
+                              转换
                             </button>
                             <button
                               onClick={() => extractAudio(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`, 'mp3')}
                               className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg text-xs hover:from-yellow-600 hover:to-orange-600 transition-all"
                             >
-                              🎵 提取音频
+                              提取音频
                             </button>
                           </div>
                         )}
@@ -495,7 +495,7 @@ export default function Downloader() {
                     </div>
                     
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 truncate">
-                      🔗 {item.url}
+                      {item.url}
                     </p>
                     
                     {item.status === 'downloading' && (
@@ -509,7 +509,7 @@ export default function Downloader() {
                     
                     {item.progress > 0 && (
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        📊 进度: {item.progress}%
+                        进度: {item.progress}%
                       </p>
                     )}
                   </div>
