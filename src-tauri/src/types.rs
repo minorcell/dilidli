@@ -77,7 +77,72 @@ pub struct VideoInfoResponse {
     pub data: Option<VideoData>,
 }
 
-// 视频流信息
+// B站实际返回的DASH格式数据结构
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DashVideo {
+    pub id: u32,
+    #[serde(rename = "baseUrl")]
+    pub base_url: String,
+    pub backup_url: Option<Vec<String>>,
+    pub bandwidth: Option<u32>,
+    pub mime_type: Option<String>,
+    pub codecs: Option<String>,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+    pub frame_rate: Option<String>,
+    pub sar: Option<String>,
+    pub start_with_sap: Option<u32>,
+    pub segment_base: Option<serde_json::Value>,
+    pub codecid: Option<u32>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DashAudio {
+    pub id: u32,
+    #[serde(rename = "baseUrl")]
+    pub base_url: String,
+    pub backup_url: Option<Vec<String>>,
+    pub bandwidth: Option<u32>,
+    pub mime_type: Option<String>,
+    pub codecs: Option<String>,
+    pub segment_base: Option<serde_json::Value>,
+    pub codecid: Option<u32>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DashData {
+    pub duration: u32,
+    #[serde(rename = "minBufferTime")]
+    pub min_buffer_time: f32,
+    pub video: Vec<DashVideo>,
+    pub audio: Vec<DashAudio>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PlayUrlData {
+    pub from: String,
+    pub result: String,
+    pub message: String,
+    pub quality: u32,
+    pub format: String,
+    pub timelength: u64,
+    pub accept_format: String,
+    pub accept_description: Vec<String>,
+    pub accept_quality: Vec<u32>,
+    pub video_codecid: u32,
+    pub seek_param: String,
+    pub seek_type: String,
+    pub dash: DashData,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PlayUrlResponse {
+    pub code: i32,
+    pub message: String,
+    pub data: Option<PlayUrlData>,
+}
+
+// 为了保持前端兼容性，创建转换结构
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VideoStream {
     pub quality: u32,
@@ -95,17 +160,11 @@ pub struct AudioStream {
     pub filesize: Option<u64>,
 }
 
+// 用于前端的简化结构
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PlayUrlData {
+pub struct SimplifiedPlayUrlData {
     pub video_streams: Vec<VideoStream>,
     pub audio_streams: Vec<AudioStream>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PlayUrlResponse {
-    pub code: i32,
-    pub message: String,
-    pub data: Option<PlayUrlData>,
 }
 
 // 存储的登录信息

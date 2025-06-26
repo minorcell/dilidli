@@ -51,9 +51,7 @@ export default function Login({ onClose }: LoginProps) {
       setLoginStatus('loading');
       setStatusMessage('获取二维码中...');
       
-      console.log('开始获取二维码...');
       const qrCodeData: QrCodeData = await invoke('get_login_qr_code');
-      console.log('二维码数据:', qrCodeData);
       
       setQrData(qrCodeData);
       setLoginStatus('polling');
@@ -62,7 +60,6 @@ export default function Login({ onClose }: LoginProps) {
       // 开始轮询登录状态
       startPolling(qrCodeData.qrcode_key);
     } catch (error) {
-      console.error('获取二维码失败:', error);
       setLoginStatus('error');
       setStatusMessage(`获取二维码失败：${error}`);
     }
@@ -72,9 +69,7 @@ export default function Login({ onClose }: LoginProps) {
   const startPolling = (qrcodeKey: string) => {
     const interval = window.setInterval(async () => {
       try {
-        console.log('轮询登录状态...', qrcodeKey);
         const result: LoginSuccessData = await invoke('poll_login_status', { qrcodeKey });
-        console.log('轮询结果:', result);
         const code = result.poll_data.code;
         
         switch (code) {
@@ -92,9 +87,7 @@ export default function Login({ onClose }: LoginProps) {
             // 设置全局登录状态，但不立即保存
             try {
               setGlobalLoginStatus(true, { name: '用户', avatar: '', mid: 0, vip_type: 0 }, result.cookies);
-              console.log('登录状态设置成功');
             } catch (error) {
-              console.error('设置登录状态失败:', error);
             }
             
             setTimeout(() => {
@@ -111,7 +104,6 @@ export default function Login({ onClose }: LoginProps) {
             break;
         }
       } catch (error) {
-        console.error('轮询登录状态失败:', error);
         setStatusMessage('网络错误，请重试');
         setLoginStatus('error');
         clearInterval(interval);

@@ -11,10 +11,6 @@ export default function Downloader() {
   const [streamData, setStreamData] = useState<PlayUrlData | null>(null);
   
   const { downloads: downloadQueue, addDownloadItem, updateDownloadProgress, updateDownloadStatus, isLoggedIn, cookies } = useAppStore();
-  
-  // 组件加载时的调试信息
-  console.log('Downloader 组件已加载');
-  console.log('当前状态:', { videoUrl, isAnalyzing, downloadQueue: downloadQueue.length });
 
   // 检查是否在 Tauri 环境中
   const isTauriAvailable = () => {
@@ -43,63 +39,41 @@ export default function Downloader() {
   
   // 处理视频 URL 分析
   const handleAnalyzeVideo = async () => {
-    console.log('=== 开始分析视频 ===');
-    console.log('Tauri 环境可用:', isTauriAvailable());
-    console.log('输入的 URL:', videoUrl);
-    
     if (!isTauriAvailable()) {
-      console.error('Tauri 环境不可用');
       alert('请在 Tauri 应用中使用此功能');
       return;
     }
 
     if (!videoUrl.trim()) {
-      console.error('URL 为空');
       alert('请输入视频链接或 BV 号');
       return;
     }
 
     const videoId = extractVideoId(videoUrl.trim());
-    console.log('提取的视频 ID:', videoId);
     
     if (!videoId) {
-      console.error('无法提取视频 ID');
       alert('无效的视频链接格式\n支持格式：\n- https://www.bilibili.com/video/BV...\n- https://www.bilibili.com/video/av...\n- https://b23.tv/...\n- BV...\n- av...');
       return;
     }
 
     setIsAnalyzing(true);
-    console.log('开始设置 analyzing 状态为 true');
 
     try {
-      console.log('调用 get_video_info，参数:', { videoId });
-      
       // 调用后端获取视频信息
       const videoData: VideoData = await invoke('get_video_info', { videoId });
-      console.log('获取到视频信息:', videoData);
-      
       setCurrentVideoData(videoData);
-      console.log('设置视频数据完成');
       
       // 如果用户已登录，获取视频流信息
       if (isLoggedIn && cookies) {
-        console.log('用户已登录，获取视频流信息');
-        console.log('登录状态:', isLoggedIn);
-        console.log('Cookies 长度:', cookies?.length);
-        
         try {
           const streamData: PlayUrlData = await invoke('get_video_streams', {
             videoId: videoData.bvid,
             cid: videoData.pages[0].cid,
             cookies
           });
-          console.log('获取到视频流信息:', streamData);
           setStreamData(streamData);
           setShowQualitySelector(true);
-          console.log('显示质量选择器');
         } catch (streamError) {
-          console.error('获取视频流失败:', streamError);
-          // 即使获取流失败，也先显示视频信息
           addDownloadItem({
             id: Date.now().toString(),
             url: videoUrl,
@@ -111,10 +85,6 @@ export default function Downloader() {
           alert(`获取视频流失败：${streamError}`);
         }
       } else {
-        console.log('用户未登录，添加到下载队列');
-        console.log('登录状态:', isLoggedIn);
-        console.log('Cookies:', cookies ? '有' : '无');
-        
         // 未登录时提示用户登录
         alert('请先登录以获取视频下载链接');
         addDownloadItem({
@@ -127,13 +97,8 @@ export default function Downloader() {
         setVideoUrl('');
       }
     } catch (error) {
-      console.error('=== 分析视频失败 ===');
-      console.error('错误类型:', typeof error);
-      console.error('错误内容:', error);
-      console.error('错误字符串:', String(error));
       alert(`分析视频失败：${error}`);
     } finally {
-      console.log('设置 analyzing 状态为 false');
       setIsAnalyzing(false);
     }
   };
@@ -157,7 +122,6 @@ export default function Downloader() {
       }
     };
 
-    console.log('添加下载任务:', downloadItem);
     addDownloadItem(downloadItem);
 
     // 不立即开始下载，让用户手动点击开始
@@ -183,23 +147,32 @@ export default function Downloader() {
     }
 
     try {
-      console.log('测试URL:', url);
       const result = await invoke('test_stream_url', { url, cookies });
-      console.log('测试结果:', result);
       alert(`URL测试成功: ${result}`);
     } catch (error) {
-      console.error('URL测试失败:', error);
       alert(`URL测试失败: ${error}`);
     }
   };
 
   // 开始下载任务
   const startDownload = async (downloadItem: any) => {
-    console.log('开始下载:', downloadItem);
-    
     if (!isTauriAvailable()) {
-      console.error('Tauri 环境不可用');
       updateDownloadStatus(downloadItem.id, 'failed');
+      alert('Tauri 环境不可用，请在应用中使用此功能');
+      return;
+    }
+
+    // 检查是否有必要的下载数据
+    if (!downloadItem.videoData || !downloadItem.selectedQuality) {
+      updateDownloadStatus(downloadItem.id, 'failed');
+      alert('下载信息不完整，请重新解析视频');
+      return;
+    }
+
+    // 检查登录状态和cookies
+    if (!isLoggedIn || !cookies) {
+      updateDownloadStatus(downloadItem.id, 'failed');
+      alert('请先登录后再下载');
       return;
     }
 
@@ -216,11 +189,10 @@ export default function Downloader() {
         cookies: cookies
       });
 
-      console.log('下载完成:', result);
       updateDownloadStatus(downloadItem.id, 'completed');
       updateDownloadProgress(downloadItem.id, 100);
+      alert(`下载完成: ${result}`);
     } catch (error) {
-      console.error('下载失败:', error);
       updateDownloadStatus(downloadItem.id, 'failed');
       alert(`下载失败：${error}`);
     }

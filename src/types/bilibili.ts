@@ -89,6 +89,12 @@ export interface DownloadItem {
     title: string;
     progress: number;
     status: 'pending' | 'downloading' | 'completed' | 'failed';
+    // 可选的额外下载信息
+    videoData?: VideoData;
+    selectedQuality?: {
+        video: VideoStream;
+        audio: AudioStream;
+    };
 }
 
 export interface StoredLoginData {

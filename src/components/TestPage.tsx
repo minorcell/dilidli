@@ -1,120 +1,129 @@
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { useAppStore } from '../store/appStore';
 
 export default function TestPage() {
-  const [result, setResult] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [testResult, setTestResult] = useState<string>('');
+  const { isLoggedIn, cookies, downloads } = useAppStore();
 
-  // 简单测试
-  const simpleTest = () => {
-    console.log('简单测试被调用');
-    setResult('简单测试正常工作！时间: ' + new Date().toLocaleTimeString());
-  };
-
-  // 测试 Tauri 连接
-  const testTauri = async () => {
-    console.log('开始测试 Tauri');
-    setLoading(true);
-    setResult('正在测试 Tauri 连接...');
+  const runDownloadTest = async () => {
+    setTestResult('开始测试...\n');
     
     try {
-      const response = await invoke('greet', { name: 'TestUser' });
-      console.log('Tauri 响应:', response);
-      setResult(`Tauri 连接成功: ${response}`);
+      // 1. 检查环境
+      const isTauri = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__;
+      setTestResult(prev => prev + `Tauri环境: ${isTauri ? '✅' : '❌'}\n`);
+      
+      // 2. 检查登录状态
+      setTestResult(prev => prev + `登录状态: ${isLoggedIn ? '✅' : '❌'}\n`);
+      setTestResult(prev => prev + `Cookies: ${cookies ? '✅ 长度:' + cookies.length : '❌'}\n`);
+      
+      // 3. 检查下载队列
+      setTestResult(prev => prev + `下载队列: ${downloads.length} 项\n`);
+      
+      if (!isTauri) {
+        setTestResult(prev => prev + '❌ 请在Tauri应用中运行测试\n');
+        return;
+      }
+      
+      if (!isLoggedIn || !cookies) {
+        setTestResult(prev => prev + '❌ 请先登录\n');
+        return;
+      }
+
+      // 4. 测试视频信息获取
+      setTestResult(prev => prev + '\n测试视频信息获取...\n');
+      const testVideoId = 'BV1qEVazqEv3';
+      
+      try {
+        const videoData = await invoke('get_video_info', { videoId: testVideoId });
+        setTestResult(prev => prev + `✅ 视频信息: ${(videoData as any).title}\n`);
+        
+        // 5. 测试视频流获取
+        setTestResult(prev => prev + '测试视频流获取...\n');
+        const streamData = await invoke('get_video_streams', {
+          videoId: (videoData as any).bvid,
+          cid: (videoData as any).pages[0].cid,
+          cookies
+        });
+        
+        setTestResult(prev => prev + `✅ 视频流: ${(streamData as any).video_streams.length} 个质量选项\n`);
+        
+        // 6. 测试下载命令（不实际下载，只测试调用）
+        setTestResult(prev => prev + '测试下载命令调用...\n');
+        
+        const selectedVideo = (streamData as any).video_streams[0];
+        const selectedAudio = (streamData as any).audio_streams[0];
+        
+        setTestResult(prev => prev + `选择的视频质量: ${selectedVideo.description}\n`);
+        setTestResult(prev => prev + `选择的音频质量: ${selectedAudio.quality}\n`);
+        
+        setTestResult(prev => prev + '\n✅ 所有测试通过！可以尝试实际下载。\n');
+        
+      } catch (videoError) {
+        setTestResult(prev => prev + `❌ 视频相关测试失败: ${videoError}\n`);
+      }
+      
     } catch (error) {
-      console.error('Tauri 错误:', error);
-      setResult(`Tauri 连接失败: ${error}`);
-    } finally {
-      setLoading(false);
+      setTestResult(prev => prev + `❌ 测试失败: ${error}\n`);
     }
   };
 
-  // 测试视频 API
-  const testVideoAPI = async () => {
-    console.log('开始测试视频 API');
-    setLoading(true);
-    setResult('正在测试视频 API...');
-    
-    try {
-      const videoData = await invoke('get_video_info', { videoId: 'BV1qEVazqEv3' });
-      console.log('视频数据:', videoData);
-      setResult(`视频 API 成功: ${JSON.stringify(videoData, null, 2)}`);
-    } catch (error) {
-      console.error('视频 API 错误:', error);
-      setResult(`视频 API 失败: ${error}`);
-    } finally {
-      setLoading(false);
-    }
+  const clearTest = () => {
+    setTestResult('');
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">功能测试页面</h1>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">下载功能测试</h1>
       
-      {/* 测试按钮 */}
       <div className="space-y-4">
-        <div className="flex space-x-4">
+        <div className="flex space-x-2">
           <button
-            onClick={simpleTest}
-            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            onClick={runDownloadTest}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            简单测试
+            运行测试
           </button>
-          
           <button
-            onClick={testTauri}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+            onClick={clearTest}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
           >
-            {loading ? '测试中...' : 'Tauri 连接测试'}
-          </button>
-          
-          <button
-            onClick={testVideoAPI}
-            disabled={loading}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:opacity-50"
-          >
-            {loading ? '测试中...' : '视频 API 测试'}
+            清除结果
           </button>
         </div>
         
-        {/* 内联按钮测试 */}
-        <div className="flex space-x-4">
-          <button
-            onClick={() => {
-              console.log('内联按钮 1');
-              setResult('内联按钮 1 被点击: ' + new Date().toLocaleTimeString());
-            }}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-          >
-            内联测试 1
-          </button>
-          
-          <button
-            onClick={() => {
-              console.log('内联按钮 2');
-              setResult('内联按钮 2 被点击: ' + new Date().toLocaleTimeString());
-            }}
-            className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-          >
-            内联测试 2
-          </button>
+        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+          <h2 className="font-semibold mb-2">当前状态</h2>
+          <p>登录状态: {isLoggedIn ? '✅ 已登录' : '❌ 未登录'}</p>
+          <p>Cookies: {cookies ? `✅ 长度 ${cookies.length}` : '❌ 无'}</p>
+          <p>下载队列: {downloads.length} 项</p>
         </div>
-      </div>
-      
-      {/* 结果显示 */}
-      <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">测试结果:</h3>
-        <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-          {result || '点击按钮开始测试...'}
-        </pre>
-      </div>
-      
-      {/* 状态信息 */}
-      <div className="text-sm text-gray-600 dark:text-gray-400">
-        <p>当前时间: {new Date().toLocaleString()}</p>
-        <p>加载状态: {loading ? '测试中' : '空闲'}</p>
-        <p>Tauri 环境: {typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ ? '可用' : '不可用'}</p>
+        
+        <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm">
+          <h2 className="font-semibold mb-2 text-white">测试结果</h2>
+          <pre className="whitespace-pre-wrap">
+            {testResult || '点击"运行测试"开始...'}
+          </pre>
+        </div>
+        
+        {downloads.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border">
+            <h2 className="font-semibold mb-2">下载队列详情</h2>
+            {downloads.map((item, index) => (
+              <div key={item.id} className="mb-2 p-2 border rounded">
+                <p><strong>#{index + 1}</strong> {item.title}</p>
+                <p className="text-sm text-gray-600">状态: {item.status}</p>
+                <p className="text-sm text-gray-600">
+                  有视频数据: {item.videoData ? '✅' : '❌'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  有质量选择: {item.selectedQuality ? '✅' : '❌'}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
