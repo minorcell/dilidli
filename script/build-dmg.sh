@@ -37,9 +37,10 @@ DEVELOPER_TEAM=""  # 如果有开发者账号，填入 Team ID
 
 # 路径定义
 PROJECT_DIR="$(pwd)"
-BUILD_DIR="$PROJECT_DIR/target/release/bundle/macos"
+BUILD_DIR="$PROJECT_DIR/src-tauri/target/release/bundle/macos"
 RESOURCES_DIR="$PROJECT_DIR/resources"
 DMG_DIR="$PROJECT_DIR/dmg-build"
+OUTPUT_DIR="$PROJECT_DIR"  # 输出目录设为根目录
 DMG_NAME="${APP_NAME}-${APP_VERSION}"
 
 print_status "开始构建 ${APP_NAME} macOS 应用..."
@@ -71,7 +72,8 @@ fi
 print_status "清理旧的构建文件..."
 rm -rf "$BUILD_DIR"
 rm -rf "$DMG_DIR"
-rm -f "${DMG_NAME}.dmg"
+rm -f "$OUTPUT_DIR/${DMG_NAME}.dmg"
+rm -rf "$OUTPUT_DIR/${APP_NAME}.app"
 
 # 安装前端依赖
 print_status "安装前端依赖..."
@@ -175,27 +177,32 @@ if [ -n "$DMG_BACKGROUND" ] && [ -f "$DMG_BACKGROUND" ]; then
     CREATE_DMG_CMD="$CREATE_DMG_CMD --background '$DMG_BACKGROUND'"
 fi
 
-CREATE_DMG_CMD="$CREATE_DMG_CMD '${DMG_NAME}.dmg' '$DMG_DIR'"
+CREATE_DMG_CMD="$CREATE_DMG_CMD '$OUTPUT_DIR/${DMG_NAME}.dmg' '$DMG_DIR'"
 
 # 执行 create-dmg 命令
 print_status "正在生成 DMG 文件..."
 eval $CREATE_DMG_CMD
 
 # 检查 DMG 是否创建成功
-if [ -f "${DMG_NAME}.dmg" ]; then
+if [ -f "$OUTPUT_DIR/${DMG_NAME}.dmg" ]; then
     print_success "DMG 文件创建成功: ${DMG_NAME}.dmg"
     
     # 获取文件大小
-    DMG_SIZE=$(du -h "${DMG_NAME}.dmg" | cut -f1)
+    DMG_SIZE=$(du -h "$OUTPUT_DIR/${DMG_NAME}.dmg" | cut -f1)
     print_status "文件大小: $DMG_SIZE"
     
     # 显示文件路径
-    DMG_FULL_PATH="$(pwd)/${DMG_NAME}.dmg"
+    DMG_FULL_PATH="$OUTPUT_DIR/${DMG_NAME}.dmg"
     print_status "完整路径: $DMG_FULL_PATH"
 else
     print_error "DMG 文件创建失败"
     exit 1
 fi
+
+# 复制独立的 .app 文件到根目录
+print_status "复制 .app 文件到根目录..."
+cp -R "$APP_PATH" "$OUTPUT_DIR/"
+print_success ".app 文件已复制到根目录: ${APP_BUNDLE_NAME}"
 
 # 清理临时文件
 print_status "清理临时文件..."
@@ -203,8 +210,9 @@ rm -rf "$DMG_DIR"
 
 # 代码签名 (如果有开发者证书)
 if [ -n "$DEVELOPER_TEAM" ]; then
-    print_status "对 DMG 进行代码签名..."
-    codesign --sign "$DEVELOPER_TEAM" --timestamp --options runtime "${DMG_NAME}.dmg"
+    print_status "对产物进行代码签名..."
+    codesign --sign "$DEVELOPER_TEAM" --timestamp --options runtime "$OUTPUT_DIR/${DMG_NAME}.dmg"
+    codesign --sign "$DEVELOPER_TEAM" --timestamp --options runtime "$OUTPUT_DIR/${APP_BUNDLE_NAME}"
     print_success "代码签名完成"
 else
     print_warning "未配置开发者团队，跳过代码签名"
@@ -213,7 +221,7 @@ fi
 
 # 验证 DMG
 print_status "验证 DMG 文件..."
-if hdiutil verify "${DMG_NAME}.dmg" > /dev/null 2>&1; then
+if hdiutil verify "$OUTPUT_DIR/${DMG_NAME}.dmg" > /dev/null 2>&1; then
     print_success "DMG 文件验证通过"
 else
     print_warning "DMG 文件验证失败，但文件可能仍然可用"
@@ -226,20 +234,16 @@ echo ""
 print_status "构建信息:"
 echo "  应用名称: $APP_NAME"
 echo "  版本: $APP_VERSION"
-echo "  DMG 文件: ${DMG_NAME}.dmg"
-echo "  文件大小: $DMG_SIZE"
+echo "  打包产物保存在根目录:"
+echo "    - DMG 文件: ${DMG_NAME}.dmg (大小: $DMG_SIZE)"
+echo "    - APP 文件: ${APP_BUNDLE_NAME}"
 echo ""
 print_status "你可以:"
 echo "  1. 双击 ${DMG_NAME}.dmg 进行安装测试"
-echo "  2. 将 DMG 文件分发给用户"
-echo "  3. 上传到应用商店或网站"
+echo "  2. 直接运行 ${APP_BUNDLE_NAME} 进行测试"
+echo "  3. 将 DMG 文件分发给用户"
+echo "  4. 上传到应用商店或网站"
 echo ""
-
-# 询问是否立即打开 DMG
-read -p "是否立即打开 DMG 文件进行测试？(y/N) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    open "${DMG_NAME}.dmg"
-fi
+print_status "所有打包产物已保存到根目录，不会自动打开。"
 
 print_success "构建脚本执行完成！" 

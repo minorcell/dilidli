@@ -4,27 +4,33 @@
 
 echo "🚀 开始快速构建 CiliCili..."
 
+# 项目根目录
+PROJECT_DIR="$(pwd)"
+APP_NAME="CiliCili"
+
 # 清理
 echo "📦 清理旧的构建文件..."
-rm -rf target/release/bundle
+rm -rf src-tauri/target/release/bundle
+rm -rf "${PROJECT_DIR}/${APP_NAME}.app"
 
 # 构建
 echo "🔨 构建应用..."
 npm run tauri build
 
 # 检查结果
-if [ -d "target/release/bundle/macos" ]; then
-    APP_PATH=$(find target/release/bundle/macos -name "*.app" -type d | head -n 1)
+if [ -d "src-tauri/target/release/bundle/macos" ]; then
+    APP_PATH=$(find src-tauri/target/release/bundle/macos -name "*.app" -type d | head -n 1)
     if [ -n "$APP_PATH" ]; then
+        APP_BUNDLE_NAME=$(basename "$APP_PATH")
         echo "✅ 构建成功: $APP_PATH"
-        echo "🎯 可以直接运行应用进行测试"
         
-        # 询问是否打开应用
-        read -p "是否立即打开应用进行测试？(y/N) " -n 1 -r
-        echo
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            open "$APP_PATH"
-        fi
+        # 复制到根目录
+        echo "📂 复制应用到根目录..."
+        cp -R "$APP_PATH" "$PROJECT_DIR/"
+        echo "✅ 应用已复制到: ${PROJECT_DIR}/${APP_BUNDLE_NAME}"
+        
+        echo "🎯 可以直接运行应用进行测试"
+        echo "📍 应用位置: ${APP_BUNDLE_NAME}"
     else
         echo "❌ 构建失败：未找到 .app 文件"
         exit 1
