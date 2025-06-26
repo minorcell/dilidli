@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useAppStore } from '../store/appStore';
-import { VideoData, PlayUrlData } from '../types/bilibili';
+import { VideoData, PlayUrlData, FileInfo, ExportOptions } from '../types/bilibili';
 
 export default function Downloader() {
   const [videoUrl, setVideoUrl] = useState('');
@@ -9,6 +9,9 @@ export default function Downloader() {
   const [currentVideoData, setCurrentVideoData] = useState<VideoData | null>(null);
   const [showQualitySelector, setShowQualitySelector] = useState(false);
   const [streamData, setStreamData] = useState<PlayUrlData | null>(null);
+  const [exportFolder, setExportFolder] = useState<string>('');
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [selectedFileForExport, setSelectedFileForExport] = useState<string>('');
   
   const { downloads: downloadQueue, addDownloadItem, updateDownloadProgress, updateDownloadStatus, isLoggedIn, cookies } = useAppStore();
 
@@ -191,6 +194,100 @@ export default function Downloader() {
     }
   };
 
+  // 选择导出文件夹
+  const selectExportFolder = async () => {
+    if (!isTauriAvailable()) {
+      alert('请在 Tauri 应用中使用此功能');
+      return;
+    }
+
+    try {
+      const folder = await invoke<string>('select_export_folder');
+      setExportFolder(folder);
+      alert(`已选择导出文件夹: ${folder}`);
+    } catch (error) {
+      alert(`选择文件夹失败: ${error}`);
+    }
+  };
+
+  // 导出文件到指定文件夹
+  const exportFileToFolder = async (filePath: string, newFilename?: string) => {
+    if (!exportFolder) {
+      alert('请先选择导出文件夹');
+      return;
+    }
+
+    if (!isTauriAvailable()) {
+      alert('请在 Tauri 应用中使用此功能');
+      return;
+    }
+
+    try {
+      const exportedPath = await invoke<string>('export_file_to_folder', {
+        sourcePath: filePath,
+        targetFolder: exportFolder,
+        newFilename
+      });
+      alert(`文件导出成功: ${exportedPath}`);
+    } catch (error) {
+      alert(`导出失败: ${error}`);
+    }
+  };
+
+  // 转换视频格式
+  const convertVideoFormat = async (filePath: string, format: string) => {
+    if (!isTauriAvailable()) {
+      alert('请在 Tauri 应用中使用此功能');
+      return;
+    }
+
+    try {
+      const outputPath = filePath.replace(/\.[^/.]+$/, `.${format}`);
+      const result = await invoke<string>('convert_video_format', {
+        inputPath: filePath,
+        outputPath,
+        format
+      });
+      alert(`格式转换成功: ${result}`);
+    } catch (error) {
+      alert(`格式转换失败: ${error}`);
+    }
+  };
+
+  // 提取音频
+  const extractAudio = async (filePath: string, format: string = 'mp3') => {
+    if (!isTauriAvailable()) {
+      alert('请在 Tauri 应用中使用此功能');
+      return;
+    }
+
+    try {
+      const audioPath = filePath.replace(/\.[^/.]+$/, `.${format}`);
+      const result = await invoke<string>('extract_audio', {
+        videoPath: filePath,
+        audioPath,
+        format
+      });
+      alert(`音频提取成功: ${result}`);
+    } catch (error) {
+      alert(`音频提取失败: ${error}`);
+    }
+  };
+
+  // 打开文件夹
+  const openFolder = async (folderPath: string) => {
+    if (!isTauriAvailable()) {
+      alert('请在 Tauri 应用中使用此功能');
+      return;
+    }
+
+    try {
+      await invoke('open_folder', { folderPath });
+    } catch (error) {
+      alert(`打开文件夹失败: ${error}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-6xl mx-auto py-8 px-4 space-y-8">
@@ -350,9 +447,29 @@ export default function Downloader() {
         {/* 下载队列 */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
           <div className="bg-gradient-to-r from-green-500 to-teal-500 p-6">
-            <h2 className="text-2xl font-bold text-white">
-              下载队列 ({downloadQueue.length})
-            </h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">
+                下载队列 ({downloadQueue.length})
+              </h2>
+              <div className="flex space-x-3">
+                <button
+                  onClick={selectExportFolder}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-medium transition-all"
+                >
+                  📁 选择导出文件夹
+                </button>
+                <button
+                  onClick={() => openFolder(exportFolder || '')}
+                  disabled={!exportFolder}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-all"
+                >
+                  🔗 打开文件夹
+                </button>
+              </div>
+            </div>
+            {exportFolder && (
+              <p className="text-white/80 text-sm mt-2">📂 当前导出文件夹: {exportFolder}</p>
+            )}
           </div>
           
           <div className="p-8">
@@ -402,6 +519,28 @@ export default function Downloader() {
                           >
                             🔄 重试
                           </button>
+                        )}
+                        {item.status === 'completed' && (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => exportFileToFolder(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`)}
+                              className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-xs hover:from-blue-600 hover:to-purple-600 transition-all"
+                            >
+                              📤 导出
+                            </button>
+                            <button
+                              onClick={() => convertVideoFormat(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`, 'avi')}
+                              className="px-3 py-1 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg text-xs hover:from-green-600 hover:to-teal-600 transition-all"
+                            >
+                              🔄 转换
+                            </button>
+                            <button
+                              onClick={() => extractAudio(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`, 'mp3')}
+                              className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg text-xs hover:from-yellow-600 hover:to-orange-600 transition-all"
+                            >
+                              🎵 提取音频
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

@@ -153,13 +153,29 @@ pub async fn download_video(
         return Ok(format!("音频下载完成: {:?}", audio_final_path));
     }
 
-    // 如果都有，需要合并（简化版本：只保留视频流）
+    // 如果都有，进行FFmpeg合并
     if video_exists && audio_exists {
-        println!("视频和音频都存在，暂时只保留视频流");
-        // TODO: 未来可以集成 ffmpeg 进行音视频合并
-        let _ = fs::remove_file(&audio_path);
-        fs::rename(&video_path, &final_path).map_err(|e| format!("重命名合成文件失败: {}", e))?;
-        return Ok(format!("视频下载完成（未合并音频）: {:?}", final_path));
+        println!("视频和音频都存在，开始FFmpeg合并");
+        
+        // 调用FFmpeg合并
+        match crate::ffmpeg::merge_video_audio(
+            app_handle.clone(),
+            video_path.to_string_lossy().to_string(),
+            audio_path.to_string_lossy().to_string(),
+            final_path.to_string_lossy().to_string(),
+        ).await {
+            Ok(_) => {
+                println!("✅ FFmpeg合并成功");
+                return Ok(format!("视频下载并合并完成: {:?}", final_path));
+            }
+            Err(e) => {
+                println!("⚠️ FFmpeg合并失败: {}，使用视频流", e);
+                // 合并失败，保留视频流
+                let _ = fs::remove_file(&audio_path);
+                fs::rename(&video_path, &final_path).map_err(|e| format!("重命名合成文件失败: {}", e))?;
+                return Ok(format!("视频下载完成（合并失败，仅视频）: {:?}", final_path));
+            }
+        }
     }
 
     // 如果都不存在

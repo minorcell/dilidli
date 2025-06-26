@@ -101,4 +101,26 @@ export interface StoredLoginData {
     cookies: string;
     user_profile?: UserProfile;
     login_time: number;
+}
+
+// FFmpeg和导出相关类型
+export interface FileInfo {
+    path: string;
+    name: string;
+    size: number;
+    is_dir: boolean;
+    created?: number;
+    modified?: number;
+}
+
+export interface ExportOptions {
+    targetFolder: string;
+    newFilename?: string;
+    format?: 'mp4' | 'avi' | 'mkv' | 'mp3' | 'aac' | 'wav';
+}
+
+export interface MergeProgress {
+    progress: number;
+    message: string;
+    stage: 'preparing' | 'merging' | 'completed' | 'failed';
 } 
