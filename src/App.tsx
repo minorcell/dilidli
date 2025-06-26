@@ -4,6 +4,7 @@ import Downloader from './components/Downloader';
 import Login from './components/Login';
 import TestPage from './components/TestPage';
 import UserProfile from './components/UserProfile';
+import { MessageProvider } from './components/ui/MessageContext';
 import { useAppStore } from './store/appStore';
 
 function App() {
@@ -22,14 +23,9 @@ function App() {
     setShowLogin(true);
   };
 
-  // VIP状态显示 (vip_type现在表示vip_status: 0=非大会员, 1=大会员)
-  const getVipBadge = (vipStatus: number) => {
-    if (vipStatus === 1) return { text: '大会员', color: 'from-pink-500 to-red-500' };
-    return null;
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <MessageProvider>
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header */}
       <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg shadow-lg border-b border-gray-200/50 dark:border-gray-700/50 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
@@ -60,7 +56,7 @@ function App() {
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
-                {showTestPage ? '🔧 退出测试' : '🧪 测试模式'}
+                {showTestPage ? '退出测试' : '测试模式'}
               </button>
               
               {isLoggedIn ? (
@@ -77,8 +73,6 @@ function App() {
                           alt="头像"
                           className="w-10 h-10 rounded-full ring-2 ring-pink-500/30"
                           onError={(e) => {
-                            console.error('头像加载失败:', userProfile.avatar);
-                            // 替换为默认头像
                             e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhcl8xXzEpIi8+CjxwYXRoIGQ9Ik0yMCAxMkM4IDE2IDggMjQgMjAgMjhDMzIgMjQgMzIgMTYgMjAgMTJaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjgiLz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQwX2xpbmVhcl8xXzEiIHgxPSIwIiB5MT0iMCIgeDI9IjQwIiB5Mj0iNDAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iI0Y0NzJCNiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMzQjgyRjYiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K';
                           }}
                         />
@@ -87,22 +81,11 @@ function App() {
                           <span className="text-white font-bold">👤</span>
                         </div>
                       )}
-                      {/* VIP标识 */}
-                      {userProfile?.vip_type && userProfile.vip_type > 0 && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-                          <span className="text-xs text-white font-bold">👑</span>
-                        </div>
-                      )}
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">
                         {userProfile?.name || '用户'}
                       </p>
-                      {userProfile?.vip_type && getVipBadge(userProfile.vip_type) && (
-                        <p className={`text-xs font-medium bg-gradient-to-r ${getVipBadge(userProfile.vip_type)?.color} bg-clip-text text-transparent`}>
-                          {getVipBadge(userProfile.vip_type)?.text}
-                        </p>
-                      )}
                     </div>
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -121,7 +104,6 @@ function App() {
                               alt="头像"
                               className="w-12 h-12 rounded-full"
                               onError={(e) => {
-                                console.error('头像加载失败:', userProfile.avatar);
                                 e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9InVybCgjZ3JhZGllbnQwX2xpbmVhcl8xXzEpIi8+CjxwYXRoIGQ9Ik0yMCAxMkM4IDE2IDggMjQgMjAgMjhDMzIgMjQgMzIgMTYgMjAgMTJaIiBmaWxsPSJ3aGl0ZSIgZmlsbC1vcGFjaXR5PSIwLjgiLz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQwX2xpbmVhcl8xXzEiIHgxPSIwIiB5MT0iMCIgeDI9IjQwIiB5Mj0iNDAiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj4KPHN0b3Agc3RvcC1jb2xvcj0iI0Y0NzJCNiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMzQjgyRjYiLz4KPC9saW5lYXJHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K';
                               }}
                             />
@@ -137,11 +119,6 @@ function App() {
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                               UID: {userProfile?.mid || 'Unknown'}
                             </p>
-                            {userProfile?.vip_type && getVipBadge(userProfile.vip_type) && (
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-1 bg-gradient-to-r ${getVipBadge(userProfile.vip_type)?.color} text-white`}>
-                                👑 {getVipBadge(userProfile.vip_type)?.text}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -155,7 +132,6 @@ function App() {
                           }}
                           className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
                         >
-                          <span>👤</span>
                           <span>个人信息</span>
                         </button>
                         <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
@@ -166,7 +142,6 @@ function App() {
                           }}
                           className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center space-x-2"
                         >
-                          <span>🚪</span>
                           <span>退出登录</span>
                         </button>
                       </div>
@@ -272,7 +247,8 @@ function App() {
           onClick={() => setShowUserMenu(false)}
         ></div>
       )}
-    </div>
+      </div>
+    </MessageProvider>
   );
 }
 

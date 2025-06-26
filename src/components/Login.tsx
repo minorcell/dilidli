@@ -89,16 +89,13 @@ export default function Login({ onClose }: LoginProps) {
             
             // 获取用户信息
             try {
-              console.log('正在获取用户信息，cookies长度:', result.cookies.length);
               const userProfile = await invoke<UserProfile>('get_user_info', { cookies: result.cookies });
-              console.log('用户信息获取成功:', userProfile);
               setGlobalLoginStatus(true, userProfile, result.cookies);
               setStatusMessage('登录成功！正在跳转...');
             } catch (error) {
               console.error('获取用户信息失败:', error);
               // 即使获取用户信息失败，也使用默认信息登录
               const defaultProfile = { name: '用户', avatar: '', mid: 0, vip_type: 0 };
-              console.log('使用默认用户信息:', defaultProfile);
               setGlobalLoginStatus(true, defaultProfile, result.cookies);
               setStatusMessage('登录成功！正在跳转...');
             }

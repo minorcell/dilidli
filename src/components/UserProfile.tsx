@@ -135,32 +135,6 @@ export default function UserProfile({ onClose }: UserProfileProps) {
               </div>
             </div>
           </div>
-
-          {/* 使用统计 */}
-          <div className="bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-2xl p-6 border border-green-200/50 dark:border-green-800/50">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-teal-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm">📊</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">使用统计</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-              <div className="p-4 bg-white/50 dark:bg-gray-700/50 rounded-xl">
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">0</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">今日下载</p>
-              </div>
-              <div className="p-4 bg-white/50 dark:bg-gray-700/50 rounded-xl">
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">0</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">本月下载</p>
-              </div>
-              <div className="p-4 bg-white/50 dark:bg-gray-700/50 rounded-xl">
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">0</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">总计下载</p>
-              </div>
-            </div>
-          </div>
-
           {/* 底部按钮 */}
           <div className="flex justify-center">
             <button

@@ -3,6 +3,8 @@ import { invoke } from '@tauri-apps/api/core';
 import { useAppStore } from '../store/appStore';
 import { VideoData, PlayUrlData} from '../types/bilibili';
 import CustomSelect from './ui/CustomSelect';
+import { isTauriAvailable } from '../lib/tauri';
+import { useMessage } from './ui/MessageContext';
 
 export default function Downloader() {
   const [videoUrl, setVideoUrl] = useState('');
@@ -13,11 +15,7 @@ export default function Downloader() {
   const [exportFolder, setExportFolder] = useState<string>('');
   
   const { downloads: downloadQueue, addDownloadItem, updateDownloadProgress, updateDownloadStatus, isLoggedIn, cookies } = useAppStore();
-
-  // 检查是否在 Tauri 环境中
-  const isTauriAvailable = () => {
-    return typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__;
-  };
+  const { error, warning } = useMessage();
 
   // 提取视频 ID 的函数
   const extractVideoId = (url: string): string | null => {
@@ -41,19 +39,19 @@ export default function Downloader() {
   // 处理视频 URL 分析
   const handleAnalyzeVideo = async () => {
     if (!isTauriAvailable()) {
-      alert('请在 Tauri 应用中使用此功能');
+      warning('请在 Tauri 应用中使用此功能');
       return;
     }
 
     if (!videoUrl.trim()) {
-      alert('请输入视频链接或 BV 号');
+      warning('请输入视频链接或 BV 号');
       return;
     }
 
     const videoId = extractVideoId(videoUrl.trim());
     
     if (!videoId) {
-      alert('无效的视频链接格式\n支持格式：\n- https://www.bilibili.com/video/BV...\n- https://www.bilibili.com/video/av...\n- https://b23.tv/...\n- BV...\n- av...');
+      error('无效的视频链接格式', '支持格式：\n- https://www.bilibili.com/video/BV...\n- https://www.bilibili.com/video/av...\n- https://b23.tv/...\n- BV...\n- av...');
       return;
     }
 
@@ -81,10 +79,10 @@ export default function Downloader() {
             status: 'pending'
           });
           setVideoUrl('');
-          alert(`获取视频流失败：${streamError}`);
+          warning(`获取视频流失败：${streamError}`);
         }
       } else {
-        alert('请先登录以获取视频下载链接');
+        warning('请先登录以获取视频下载链接');
         addDownloadItem({
           id: Date.now().toString(),
           url: videoUrl,
@@ -95,7 +93,7 @@ export default function Downloader() {
         setVideoUrl('');
       }
     } catch (error) {
-      alert(`分析视频失败：${error}`);
+      warning(`分析视频失败：${error}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -130,19 +128,19 @@ export default function Downloader() {
   const startDownload = async (downloadItem: any) => {
     if (!isTauriAvailable()) {
       updateDownloadStatus(downloadItem.id, 'failed');
-      alert('Tauri 环境不可用，请在应用中使用此功能');
+      warning('Tauri 环境不可用，请在应用中使用此功能');
       return;
     }
 
     if (!downloadItem.videoData || !downloadItem.selectedQuality) {
       updateDownloadStatus(downloadItem.id, 'failed');
-      alert('下载信息不完整，请重新解析视频');
+      warning('下载信息不完整，请重新解析视频');
       return;
     }
 
     if (!isLoggedIn || !cookies) {
       updateDownloadStatus(downloadItem.id, 'failed');
-      alert('请先登录后再下载');
+      warning('请先登录后再下载');
       return;
     }
 
@@ -159,10 +157,10 @@ export default function Downloader() {
 
       updateDownloadStatus(downloadItem.id, 'completed');
       updateDownloadProgress(downloadItem.id, 100);
-      alert(`下载完成: ${result}`);
+      warning(`下载完成: ${result}`);
     } catch (error) {
       updateDownloadStatus(downloadItem.id, 'failed');
-      alert(`下载失败：${error}`);
+      warning(`下载失败：${error}`);
     }
   };
 
@@ -176,28 +174,28 @@ export default function Downloader() {
   // 选择导出文件夹
   const selectExportFolder = async () => {
     if (!isTauriAvailable()) {
-      alert('请在 Tauri 应用中使用此功能');
+      warning('请在 Tauri 应用中使用此功能');
       return;
     }
 
     try {
       const folder = await invoke<string>('select_export_folder');
       setExportFolder(folder);
-      alert(`已选择导出文件夹: ${folder}`);
+      warning(`已选择导出文件夹: ${folder}`);
     } catch (error) {
-      alert(`选择文件夹失败: ${error}`);
+      warning(`选择文件夹失败: ${error}`);
     }
   };
 
   // 导出文件到指定文件夹
   const exportFileToFolder = async (filePath: string, newFilename?: string) => {
     if (!exportFolder) {
-      alert('请先选择导出文件夹');
+      warning('请先选择导出文件夹');
       return;
     }
 
     if (!isTauriAvailable()) {
-      alert('请在 Tauri 应用中使用此功能');
+      warning('请在 Tauri 应用中使用此功能');
       return;
     }
 
@@ -207,16 +205,16 @@ export default function Downloader() {
         targetFolder: exportFolder,
         newFilename
       });
-      alert(`文件导出成功: ${exportedPath}`);
+      warning(`文件导出成功: ${exportedPath}`);
     } catch (error) {
-      alert(`导出失败: ${error}`);
+      warning(`导出失败: ${error}`);
     }
   };
 
   // 转换视频格式
   const convertVideoFormat = async (filePath: string, format: string) => {
     if (!isTauriAvailable()) {
-      alert('请在 Tauri 应用中使用此功能');
+      warning('请在 Tauri 应用中使用此功能');
       return;
     }
 
@@ -227,16 +225,16 @@ export default function Downloader() {
         outputPath,
         format
       });
-      alert(`格式转换成功: ${result}`);
+      warning(`格式转换成功: ${result}`);
     } catch (error) {
-      alert(`格式转换失败: ${error}`);
+      warning(`格式转换失败: ${error}`);
     }
   };
 
   // 提取音频
   const extractAudio = async (filePath: string, format: string = 'mp3') => {
     if (!isTauriAvailable()) {
-      alert('请在 Tauri 应用中使用此功能');
+      warning('请在 Tauri 应用中使用此功能');
       return;
     }
 
@@ -247,23 +245,23 @@ export default function Downloader() {
         audioPath,
         format
       });
-      alert(`音频提取成功: ${result}`);
+      warning(`音频提取成功: ${result}`);
     } catch (error) {
-      alert(`音频提取失败: ${error}`);
+      warning(`音频提取失败: ${error}`);
     }
   };
 
   // 打开文件夹
   const openFolder = async (folderPath: string) => {
     if (!isTauriAvailable()) {
-      alert('请在 Tauri 应用中使用此功能');
+      warning('请在 Tauri 应用中使用此功能');
       return;
     }
 
     try {
       await invoke('open_folder', { folderPath });
     } catch (error) {
-      alert(`打开文件夹失败: ${error}`);
+      warning(`打开文件夹失败: ${error}`);
     }
   };
 
@@ -316,18 +314,8 @@ export default function Downloader() {
                   disabled={isAnalyzing || !videoUrl.trim()}
                   className="px-8 py-3 bg-gradient-to-r from-pink-500 to-blue-500 text-white rounded-xl hover:from-pink-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all shadow-lg hover:shadow-xl"
                 >
-                  {isAnalyzing ? '分析中...' : '🔍 解析'}
+                  {isAnalyzing ? '分析中...' : '解析'}
                 </button>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">支持的格式：</p>
-              <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <div>• 完整链接：https://www.bilibili.com/video/BV...</div>
-                <div>• 短链接：https://b23.tv/xxx</div>
-                <div>• 直接输入：BV1qEVazqEv3</div>
-                <div>• AV 号：av123456</div>
               </div>
             </div>
           </div>
@@ -335,16 +323,17 @@ export default function Downloader() {
 
         {/* 质量选择器 */}
         {showQualitySelector && currentVideoData && streamData && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-6">
               <h2 className="text-2xl font-bold text-white">
                 选择下载质量
               </h2>
             </div>
             
-            <div className="p-8 space-y-6">
-              {/* 视频信息预览 */}
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6">
+            <div className="p-8">
+              {/* 视频信息预览和清晰度选择整合 */}
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-6 space-y-6">
+                {/* 视频信息 */}
                 <div className="flex space-x-6">
                   <img
                     src={currentVideoData.pic}
@@ -365,30 +354,30 @@ export default function Downloader() {
                     </div>
                   </div>
                 </div>
+
+                {/* 清晰度选择 */}
+                <div className="space-y-3 relative">
+                  <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
+                    选择清晰度：
+                  </label>
+                  <CustomSelect
+                    options={streamData.video_streams.map((videoStream, index) => ({
+                      value: index,
+                      label: videoStream.description,
+                      description: videoStream.format ? `格式: ${videoStream.format}` : undefined,
+                      filesize: videoStream.filesize
+                    }))}
+                    onChange={(selectedIndex) => {
+                      const selectedVideo = streamData.video_streams[selectedIndex as number];
+                      const selectedAudio = streamData.audio_streams[0];
+                      handleQualitySelect(selectedVideo, selectedAudio);
+                    }}
+                    placeholder="请选择视频清晰度"
+                  />
+                </div>
               </div>
 
-              {/* 清晰度选择下拉菜单 */}
-              <div className="space-y-4 relative">
-                <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
-                  选择清晰度：
-                </label>
-                <CustomSelect
-                  options={streamData.video_streams.map((videoStream, index) => ({
-                    value: index,
-                    label: videoStream.description,
-                    description: videoStream.format ? `格式: ${videoStream.format}` : undefined,
-                    filesize: videoStream.filesize
-                  }))}
-                  onChange={(selectedIndex) => {
-                    const selectedVideo = streamData.video_streams[selectedIndex as number];
-                    const selectedAudio = streamData.audio_streams[0];
-                    handleQualitySelect(selectedVideo, selectedAudio);
-                  }}
-                  placeholder="请选择视频清晰度"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end space-x-3 mt-6">
                 <button
                   onClick={() => {
                     setShowQualitySelector(false);

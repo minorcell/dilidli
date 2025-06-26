@@ -112,7 +112,16 @@ export default function CustomSelect({
 
       {/* 下拉菜单 */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl overflow-hidden animate-slideDownAndFade">
+        <div className="fixed z-[9999] bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-2xl overflow-hidden animate-slideDownAndFade"
+             style={{
+               top: dropdownRef.current ? 
+                 dropdownRef.current.getBoundingClientRect().bottom + 8 : 0,
+               left: dropdownRef.current ? 
+                 dropdownRef.current.getBoundingClientRect().left : 0,
+               width: dropdownRef.current ? 
+                 dropdownRef.current.getBoundingClientRect().width : 'auto',
+               maxHeight: '320px'
+             }}>
           <div className="max-h-80 overflow-y-auto custom-scrollbar">
             {options.map((option) => (
               <button
