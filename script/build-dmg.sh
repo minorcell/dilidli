@@ -153,7 +153,7 @@ print_status "创建 DMG 文件..."
 
 # DMG 背景和图标设置
 DMG_BACKGROUND="$PROJECT_DIR/dmg-background.png"
-DMG_ICON="$PROJECT_DIR/src-tauri/icons/icon.icns"
+DMG_ICON="$PROJECT_DIR/src-tauri/icons/icon.png"
 
 # 如果没有背景图，创建一个简单的
 if [ ! -f "$DMG_BACKGROUND" ]; then
