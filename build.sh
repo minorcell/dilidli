@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# CiliCili 构建快捷方式
+# DILIDILI 构建快捷方式
 # 调用 script 目录下的构建脚本
 
 SCRIPT_DIR="$(dirname "$0")/script"
@@ -12,7 +12,7 @@ elif [ "$1" = "quick" ] || [ "$1" = "dev" ]; then
     echo "⚡ 启动快速构建..."
     exec "$SCRIPT_DIR/quick-build.sh"
 else
-    echo "CiliCili 构建工具"
+    echo "DILIDILI 构建工具"
     echo ""
     echo "用法:"
     echo "  ./build.sh dmg     # 完整构建并打包成 DMG"

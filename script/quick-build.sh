@@ -2,12 +2,12 @@
 
 # 快速构建脚本 - 仅构建不打包 DMG
 
-echo "🚀 开始快速构建 CiliCili..."
+echo "🚀 开始快速构建 DILIDILI..."
 
 # 项目根目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
-APP_NAME="CiliCili"
+APP_NAME="DILIDILI"
 
 # 清理
 echo "📦 清理旧的构建文件..."

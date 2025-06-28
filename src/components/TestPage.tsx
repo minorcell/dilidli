@@ -218,7 +218,7 @@ export default function TestPage() {
                 <span className="w-3 h-3 bg-red-500 rounded-full"></span>
                 <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
                 <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                <span className="text-sm ml-2">CiliCili 测试终端</span>
+                <span className="text-sm ml-2">DILIDILI 测试终端</span>
               </div>
               <pre className="whitespace-pre-wrap leading-relaxed">
                 {testResult || '点击上方按钮开始测试...\n\n完整功能测试 - 检测所有下载相关功能\n快速检查 - 仅检查基本环境状态'}

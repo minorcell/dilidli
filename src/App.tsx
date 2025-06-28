@@ -37,7 +37,7 @@ function App() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-blue-500 bg-clip-text text-transparent">
-                  CiliCili
+                  DILIDILI
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   哔哩哔哩视频下载器
@@ -181,7 +181,7 @@ function App() {
 
               {/* 标题和描述 */}
               <h2 className="text-5xl font-bold bg-gradient-to-r from-pink-500 to-blue-500 bg-clip-text text-transparent mb-4">
-                CiliCili 下载器
+                DILIDILI 下载器
               </h2>
               <p className="text-xl text-gray-600 dark:text-gray-400 mb-2">
                 高质量下载你喜欢的哔哩哔哩视频

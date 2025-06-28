@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# CiliCili macOS 打包脚本
+# DILIDILI macOS 打包脚本
 # 将应用打包成 DMG 格式，包含 FFmpeg
 
 set -e  # 遇到错误就退出
@@ -30,9 +30,9 @@ print_error() {
 }
 
 # 项目信息
-APP_NAME="CiliCili"
+APP_NAME="DILIDILI"
 APP_VERSION="1.0.0"
-BUNDLE_ID="com.minorcell.cilicili"
+BUNDLE_ID="com.minorcell.DILIDILI"
 DEVELOPER_TEAM=""  # 如果有开发者账号，填入 Team ID
 
 # 路径定义

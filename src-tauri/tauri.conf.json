@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "CiliCili",
+  "productName": "DILIDILI",
   "version": "1.0.0",
-  "identifier": "com.minorcell.cilicili",
+  "identifier": "com.minorcell.DILIDILI",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "CiliCili - 哔哩哔哩视频下载器",
+        "title": "DILIDILI - 哔哩哔哩视频下载器",
         "width": 1200,
         "height": 800,
         "resizable": true,

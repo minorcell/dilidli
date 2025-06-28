@@ -25,7 +25,7 @@ pub async fn download_video(
     // 创建下载目录
     let downloads_dir = app_handle.path().download_dir()
         .map_err(|e| e.to_string())?
-        .join("CiliCili");
+        .join("DILIDILI");
     
     fs::create_dir_all(&downloads_dir).map_err(|e| e.to_string())?;
     

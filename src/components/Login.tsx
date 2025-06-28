@@ -153,28 +153,19 @@ export default function Login({ onClose }: LoginProps) {
             <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
               <span className="text-5xl">🎬</span>
             </div>
-            <h1 className="text-5xl font-bold mb-4">CiliCili</h1>
+            <h1 className="text-5xl font-bold mb-4">DILIDILI</h1>
             <p className="text-xl text-white/90 mb-8">哔哩哔哩桌面下载器</p>
           </div>
           
           {/* 特性介绍 */}
           <div className="space-y-4 max-w-sm">
             <div className="flex items-center space-x-3 text-white/90">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <span>🎯</span>
-              </div>
               <span>高质量视频下载</span>
             </div>
             <div className="flex items-center space-x-3 text-white/90">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <span>⚡</span>
-              </div>
               <span>极速下载体验</span>
             </div>
             <div className="flex items-center space-x-3 text-white/90">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <span>🛡️</span>
-              </div>
               <span>安全隐私保护</span>
             </div>
           </div>
@@ -186,9 +177,6 @@ export default function Login({ onClose }: LoginProps) {
         {/* 头部 */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-blue-500 rounded-xl flex items-center justify-center lg:hidden">
-              <span className="text-white text-xl">🎬</span>
-            </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">登录账户</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">使用哔哩哔哩账号登录</p>
@@ -240,21 +228,6 @@ export default function Login({ onClose }: LoginProps) {
                       includeMargin={true}
                       className="rounded-2xl shadow-sm"
                     />
-                    {/* 状态指示器 */}
-                    <div className="absolute -bottom-2 -right-2">
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center shadow-lg",
-                        loginStatus === 'polling' && "bg-blue-500 animate-pulse",
-                        loginStatus === 'success' && "bg-green-500",
-                        loginStatus === 'error' && "bg-red-500"
-                      )}>
-                        <span className="text-white text-sm">
-                          {loginStatus === 'polling' && '📱'}
-                          {loginStatus === 'success' && '✅'}
-                          {loginStatus === 'error' && '❌'}
-                        </span>
-                      </div>
-                    </div>
                   </div>
                 ) : (
                   <div className="w-[200px] h-[200px] flex items-center justify-center">
@@ -272,9 +245,6 @@ export default function Login({ onClose }: LoginProps) {
                       </div>
                     ) : (
                       <div className="text-center space-y-4">
-                        <div className="w-16 h-16 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto">
-                          <span className="text-2xl">📱</span>
-                        </div>
                         <p className="text-gray-500 dark:text-gray-400 text-sm">准备获取二维码</p>
                       </div>
                     )}
@@ -294,13 +264,6 @@ export default function Login({ onClose }: LoginProps) {
                 loginStatus === 'idle' && "bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
               )}>
                 <span>
-                  {loginStatus === 'success' && '🎉'}
-                  {loginStatus === 'error' && '⚠️'}
-                  {loginStatus === 'polling' && '📱'}
-                  {loginStatus === 'loading' && '⏳'}
-                  {loginStatus === 'idle' && '🔄'}
-                </span>
-                <span>
                   {statusMessage || 
                     (loginStatus === 'idle' ? '准备获取登录二维码' : 
                      loginStatus === 'loading' ? '正在生成二维码...' : 
@@ -316,7 +279,6 @@ export default function Login({ onClose }: LoginProps) {
                     disabled={!isTauriAvailable()}
                     className="w-full px-6 py-3 bg-gradient-to-r from-pink-500 to-blue-500 text-white rounded-xl hover:from-pink-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2"
                   >
-                    <span>🔄</span>
                     <span>重新获取二维码</span>
                   </button>
                 )}
@@ -326,14 +288,12 @@ export default function Login({ onClose }: LoginProps) {
                     onClick={refreshQrCode}
                     className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold transition-all flex items-center justify-center space-x-2"
                   >
-                    <span>🔄</span>
                     <span>刷新二维码</span>
                   </button>
                 )}
                 
                 {loginStatus === 'success' && (
                   <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400">
-                    <div className="animate-bounce">🎉</div>
                     <span className="font-semibold">登录成功！正在初始化...</span>
                   </div>
                 )}
@@ -343,11 +303,9 @@ export default function Login({ onClose }: LoginProps) {
             {/* 底部说明 */}
             <div className="text-center space-y-2">
               <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-                <span>💡</span>
                 <span>使用哔哩哔哩手机App扫描上方二维码</span>
               </div>
               <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-                <span>🔒</span>
                 <span>登录信息将安全存储在本地</span>
               </div>
             </div>

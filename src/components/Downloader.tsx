@@ -275,7 +275,7 @@ export default function Downloader() {
             <span className="text-3xl">🎬</span>
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-blue-500 bg-clip-text text-transparent mb-2">
-            CiliCili 下载器
+            DILIDILI 下载器
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
             高质量下载你喜欢的B站视频
@@ -472,19 +472,19 @@ export default function Downloader() {
                         {item.status === 'completed' && (
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => exportFileToFolder(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`)}
+                              onClick={() => exportFileToFolder(`/Users/mcell/Downloads/DILIDILI/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`)}
                               className="px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-xs hover:from-blue-600 hover:to-purple-600 transition-all"
                             >
                               导出
                             </button>
                             <button
-                              onClick={() => convertVideoFormat(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`, 'avi')}
+                              onClick={() => convertVideoFormat(`/Users/mcell/Downloads/DILIDILI/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`, 'avi')}
                               className="px-3 py-1 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg text-xs hover:from-green-600 hover:to-teal-600 transition-all"
                             >
                               转换
                             </button>
                             <button
-                              onClick={() => extractAudio(`/Users/mcell/Downloads/CiliCili/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`, 'mp3')}
+                              onClick={() => extractAudio(`/Users/mcell/Downloads/DILIDILI/${item.title.replace(/[^a-zA-Z0-9\s\-_]/g, '_')}.mp4`, 'mp3')}
                               className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg text-xs hover:from-yellow-600 hover:to-orange-600 transition-all"
                             >
                               提取音频

@@ -1,8 +1,8 @@
-# 🎬 CiliCili - 哔哩哔哩视频下载器
+# 🎬 DILIDILI - 哔哩哔哩视频下载器
 
 一个现代化的哔哩哔哩视频下载器，支持高质量视频下载、音视频自动合并、格式转换等功能。
 
-![CiliCili](https://img.shields.io/badge/Platform-Desktop-blue) ![Tauri](https://img.shields.io/badge/Framework-Tauri-orange) ![React](https://img.shields.io/badge/Frontend-React-61DAFB) ![Rust](https://img.shields.io/badge/Backend-Rust-orange)
+![DILIDILI](https://img.shields.io/badge/Platform-Desktop-blue) ![Tauri](https://img.shields.io/badge/Framework-Tauri-orange) ![React](https://img.shields.io/badge/Frontend-React-61DAFB) ![Rust](https://img.shields.io/badge/Backend-Rust-orange)
 
 ## ✨ 功能特性
 
@@ -38,8 +38,8 @@
 
 1. **克隆项目**
 ```bash
-git clone https://github.com/minorcell/cilicili.git
-cd cilicili
+git clone https://github.com/minorcell/DILIDILI.git
+cd DILIDILI
 ```
 
 2. **安装依赖**

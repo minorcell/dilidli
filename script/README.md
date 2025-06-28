@@ -1,6 +1,6 @@
-# 🚀 CiliCili 构建指南
+# 🚀 DILIDILI 构建指南
 
-本文档介绍如何构建和打包 CiliCili 应用。
+本文档介绍如何构建和打包 DILIDILI 应用。
 
 ## 📋 系统要求
 
@@ -33,8 +33,8 @@ brew install create-dmg
 
 ### 1. 克隆项目
 ```bash
-git clone https://github.com/minorcell/cilicili.git
-cd cilicili
+git clone https://github.com/minorcell/DILIDILI.git
+cd DILIDILI
 ```
 
 ### 2. 安装项目依赖
@@ -75,14 +75,14 @@ find target/release/bundle/macos -name "*.app"
 ### 快速构建输出
 ```
 target/release/bundle/macos/
-└── CiliCili.app/          # 可执行的 macOS 应用
+└── DILIDILI.app/          # 可执行的 macOS 应用
 ```
 
 ### 完整构建输出
 ```
-CiliCili-1.0.0.dmg         # 可分发的 DMG 文件
+DILIDILI-1.0.0.dmg         # 可分发的 DMG 文件
 target/release/bundle/macos/
-└── CiliCili.app/          # 应用包
+└── DILIDILI.app/          # 应用包
 ```
 
 ## 🔧 配置选项
@@ -91,18 +91,18 @@ target/release/bundle/macos/
 编辑 `src-tauri/tauri.conf.json`:
 ```json
 {
-  "productName": "CiliCili",
+  "productName": "DILIDILI",
   "version": "1.0.0",
-  "identifier": "com.minorcell.cilicili"
+  "identifier": "com.minorcell.DILIDILI"
 }
 ```
 
 ### 修改构建脚本设置
 编辑 `build-dmg.sh`:
 ```bash
-APP_NAME="CiliCili"
+APP_NAME="DILIDILI"
 APP_VERSION="1.0.0"
-BUNDLE_ID="com.minorcell.cilicili"
+BUNDLE_ID="com.minorcell.DILIDILI"
 DEVELOPER_TEAM=""  # 填入开发者团队 ID 启用代码签名
 ```
 
@@ -139,10 +139,10 @@ cd ..
 ```bash
 # 上传到 Apple 进行公证
 xcrun altool --notarize-app \
-  --primary-bundle-id "com.minorcell.cilicili" \
+  --primary-bundle-id "com.minorcell.DILIDILI" \
   --username "your-apple-id@example.com" \
   --password "app-specific-password" \
-  --file "CiliCili-1.0.0.dmg"
+  --file "DILIDILI-1.0.0.dmg"
 ```
 
 ## 🚨 故障排除
@@ -182,7 +182,7 @@ cd resources && unzip ffmpeg.zip && chmod +x ffmpeg && rm ffmpeg.zip
 brew install create-dmg
 
 # 清理之前的构建
-rm -rf dmg-build CiliCili-*.dmg
+rm -rf dmg-build DILIDILI-*.dmg
 ```
 
 ### 构建日志
