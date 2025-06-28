@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiLiDiLi – 哔哩哔哩视频下载器（免费下载、开源、跨平台）</title>
+    <link rel="icon" href="./public/icon.png" type="image/png">
+    <meta name="description" content="DiLiDiLi：一款简洁快速的开源哔哩哔哩视频下载工具，支持 Windows／macOS／Linux，零广告、离线下载，一键获取弹幕和封面。">
+    <link rel="canonical" href="https://dilidili.example.com/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="DiLiDiLi – 哔哩哔哩视频下载器">
+    <meta property="og:description" content="开源、免费、跨平台的 B 站视频下载工具—DiLiDiLi">
+    <meta property="og:url" content="https://dilidili.example.com/">
+    <meta property="og:image" content="https://dilidili.example.com/assets/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DiLiDiLi – 哔哩哔哩视频下载器">
+    <meta name="twitter:description" content="开源、免费、跨平台 B 站视频下载工具">
+    <meta name="twitter:image" content="https://dilidili.example.com/assets/og-image.png">
+    <style>
+        :root {
+            --bg-color: #000000;
+            --text-color: #E6E6E6;
+            --secondary-text-color: #A3A3A3;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --highlight-purple: #b193f7;
+            --highlight-pink: #f793e5;
+            --highlight-gradient: linear-gradient(90deg, var(--highlight-purple), var(--highlight-pink));
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', 'Helvetica Neue', 'Arial', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.6;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(at 20% 20%, hsla(271, 93%, 73%, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 0%, hsla(289, 93%, 73%, 0.15) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(205, 93%, 73%, 0.1) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, hsla(340, 93%, 73%, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            position: relative;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.3;
+            z-index: -2;
+            will-change: transform;
+        }
+
+        .cursor-light {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--highlight-purple) 0%, transparent 70%);
+            filter: blur(100px);
+            opacity: 0.2;
+            pointer-events: none;
+            transition: transform 0.2s ease-out;
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            padding: 20px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        nav a {
+            color: var(--secondary-text-color);
+            text-decoration: none;
+            margin-left: 24px;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--text-color);
+        }
+
+        .hero {
+            padding-top: 220px;
+            padding-bottom: 180px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(120deg, #a0e9ff 0%, #a1c4fd 50%, #ffc4e8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradient-flow 10s ease-in-out infinite;
+            background-size: 200% 200%;
+        }
+
+        .hero h1 .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(25px);
+            transition: opacity 0.6s cubic-bezier(0.2, 1, 0.3, 1), transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        .hero h1 .word.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes gradient-flow {
+            0% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--secondary-text-color);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--highlight-gradient);
+            color: white;
+            padding: 16px 36px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 0 0 0 rgba(177, 147, 247, 0.5);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(177, 147, 247, 0.3);
+        }
+
+        .features {
+            padding: 100px 0;
+        }
+
+        .features h2 {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 80px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: rgba(16, 16, 16, 0.5);
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+
+        .feature-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.08), transparent 40%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: inherit;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-card .icon {
+            margin-bottom: 20px;
+            width: 48px;
+            height: 48px;
+            background: var(--highlight-gradient);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--secondary-text-color);
+        }
+
+        footer {
+            padding: 60px 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        footer p {
+            color: var(--secondary-text-color);
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            color: var(--secondary-text-color);
+            margin: 0 12px;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-color);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .cursor-light {
+                display: none;
+            }
+        }
+
+        .title-anim,
+        .title-anim .word {
+            background: linear-gradient(120deg, #a0e9ff 0%, #a1c4fd 50%, #ffc4e8 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .title-anim .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(25px);
+            transition: opacity 0.6s cubic-bezier(0.2, 1, 0.3, 1),
+                transform 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
+        .title-anim .word.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes gradient-flow {
+            0% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px var(--glow-color-2);
+        }
+
+        /* Scroll progress bar */
+        #scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        #scroll-progress #progress {
+            width: 100%;
+            height: 0;
+            background: var(--glow-color-2);
+        }
+
+        /* CSS Tooltip */
+        [data-tooltip] {
+            position: relative;
+            cursor: pointer;
+        }
+
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-5px);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Lottie container */
+        .lottie {
+            width: 200px;
+            height: 200px;
+            margin: 1rem auto;
+        }
+
+        /* Active nav link highlight */
+        header nav a.active {
+            color: var(--glow-color-2);
+            font-weight: 600;
+        }
+
+        /* Material Icons sizing */
+        .material-icons.md-16 {
+            font-size: 16px;
+            vertical-align: middle;
+        }
+
+        .material-icons.md-32 {
+            font-size: 32px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="scroll-progress">
+        <div id="progress"></div>
+    </div>
+    <div class="grid-bg"></div>
+    <div class="cursor-light"></div>
+
+    <header>
+        <div class="container">
+            <div class="logo">DiliDili - 哔站视频下载器</div>
+            <nav>
+                <a href="#features" data-tooltip="查看功能"><span class="material-icons md-16">grid_view</span> 功能</a>
+                <a href="https://github.com/minorcell/dilidili/releases" target="_blank" data-tooltip="获取最新版本"><span
+                        class="material-icons md-16">cloud_download</span> 下载</a>
+                <a href="https://github.com/minorcell/dilidili" target="_blank" data-tooltip="访问 GitHub 仓库"><span
+                        class="material-icons md-16">code</span> GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1 class="title-anim">DiLiDiLi - 哔站视频下载器</h1>
+                <div id="lottie-hero" class="lottie"></div>
+                <p>一个简洁、强大、为极致体验而生的哔站视频下载器。现已发布第一个正式版本！</p>
+                <a href="https://github.com/minorcell/dilidili/releases" id="download-button" class="cta-button"
+                    target="_blank" data-tooltip="下载最新版本">获取最新版本</a>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <h2>核心功能</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="icon">
+                            <span class="material-icons md-32">link</span>
+                        </div>
+                        <h3>智能链接解析</h3>
+                        <p>无论是 BV/av 号，还是番剧链接，都能智能识别并快速解析，一键直达，无需繁琐操作。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">
+                            <span class="material-icons md-32">movie</span>
+                        </div>
+                        <h3>高清画质任选</h3>
+                        <p>支持从流畅 360P 到超清 4K 的多种画质，音视频流分离下载，还原每一帧的精彩。</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="icon">
+                            <span class="material-icons md-32">security</span>
+                        </div>
+                        <h3>安全账号登录</h3>
+                        <p>通过安全的扫码登录方式，轻松同步你的B站账号，解锁更高质量的专属内容和下载权限。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 DiliDili. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="https://github.com/minorcell/dilidili" target="_blank">GitHub 仓库</a>
+                <a href="https://github.com/minorcell/dilidili/releases" target="_blank">历史版本</a>
+                <a href="https://github.com/minorcell/dilidili/issues" target="_blank">报告问题</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.7.14/lottie.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cursorLight = document.querySelector('.cursor-light');
+            if (cursorLight) {
+                document.addEventListener('mousemove', e => {
+                    cursorLight.style.transform = `translate(${e.clientX - 300}px, ${e.clientY - 300}px)`;
+                });
+            }
+
+            const shineCards = document.querySelectorAll('.feature-card');
+            shineCards.forEach(card => {
+                card.addEventListener('mousemove', e => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+
+            // Text Animation
+            const title = document.querySelector('.title-anim');
+            if (title) {
+                const text = title.textContent.trim();
+                // Split by spaces and filter out empty strings that might result from multiple spaces
+                const words = text.split(/\s+/).filter(Boolean).map(word => `<span class="word">${word}</span>`).join(' ');
+                title.innerHTML = words;
+
+                const titleObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const wordSpans = entry.target.querySelectorAll('.word');
+                            wordSpans.forEach((span, index) => {
+                                setTimeout(() => {
+                                    span.classList.add('is-visible');
+                                }, index * 150); // Slightly faster animation
+                            });
+                            titleObserver.unobserve(entry.target);
+                        }
+                    });
+                }, {
+                    threshold: 0.1 // Lower the threshold to trigger sooner
+                });
+
+                titleObserver.observe(title);
+            }
+
+            // Fetch the latest release from GitHub API
+            fetch('https://api.github.com/repos/minorcell/dilidili/releases/latest')
+                .then(response => response.json())
+                .then(data => {
+                    const downloadButton = document.getElementById('download-button');
+                    if (data && data.tag_name && data.html_url) {
+                        downloadButton.href = data.html_url;
+                        downloadButton.textContent = `下载 ${data.tag_name}`;
+                    } else {
+                        // Fallback in case of API error
+                        downloadButton.textContent = '查看所有版本';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching latest release:', error);
+                    const downloadButton = document.getElementById('download-button');
+                    downloadButton.textContent = '查看所有版本';
+                });
+
+            // Parallax background
+            const gridBg = document.querySelector('.grid-bg');
+            window.addEventListener('scroll', () => {
+                const offset = window.pageYOffset;
+                gridBg.style.transform = `translateY(${offset * 0.6}px)`;
+
+                // Scroll progress bar
+                const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                const scrolled = (offset / docHeight) * 100;
+                document.getElementById('progress').style.height = scrolled + '%';
+            });
+
+            // Scroll-triggered nav link highlight
+            const sections = document.querySelectorAll('main section[id]');
+            const navLinks = document.querySelectorAll('header nav a[href^="#"]');
+            const secObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.id;
+                    const link = document.querySelector(`header nav a[href="#${id}"]`);
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(a => a.classList.remove('active'));
+                        link && link.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.5 });
+            sections.forEach(sec => secObserver.observe(sec));
+
+            // Card tilt effect
+            const tiltCards = document.querySelectorAll('.feature-card');
+            tiltCards.forEach(card => {
+                card.addEventListener('mousemove', e => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const rx = -(y - rect.height / 2) / (rect.height / 2) * 8;
+                    const ry = (x - rect.width / 2) / (rect.width / 2) * 8;
+                    card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = '';
+                });
+            });
+
+            // Lottie animation
+            lottie.loadAnimation({
+                container: document.getElementById('lottie-hero'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: 'https://assets8.lottiefiles.com/packages/lf20_u4yrau.json'
+            });
+        });
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "DiLiDiLi",
+      "author": {
+        "@type": "Organization",
+        "name": "DiLiDiLi 开源社区"
+      },
+      "applicationCategory": "MultimediaDownload",
+      "operatingSystem": "Windows, macOS, Linux",
+      "downloadUrl": "https://github.com/minorcell/dilidili/releases/latest",
+      "url": "https://dilidili.example.com",
+      "image": "https://dilidili.example.com/assets/logo.png",
+      "description": "一款简洁、快速的开源哔哩哔哩视频下载工具。",
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "120"
+      }
+    }
+    </script>
+</body>
+
+</html>
